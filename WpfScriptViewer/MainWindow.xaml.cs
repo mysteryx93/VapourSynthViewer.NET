@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -34,11 +36,31 @@ namespace WpfScriptViewer {
             InitializeComponent();
         }
 
+        List<int> Frames = new List<int>();
+
         private void Window_Loaded(object sender, RoutedEventArgs e) {
-			//RunScript();
-			Player.Host.SetDllPath(@"C:\Program Files (x86)\VapourSynth\core64");
-			Player.Host.LimitFps = true;
-			Player.Host.Load(@"C:\GitHub\VapourSynth Viewer .NET\test.vpy");
-		}
-	}
+            //await RunTest();
+
+            Player.Host.SetDllPath(@"C:\Program Files (x86)\VapourSynth\core64");
+            Player.Host.LimitFps = true;
+            VsFrame.Requested += (s, f) => {
+                Frames.Add(f);
+            };
+            VsFrame.Deallocated += (s, f) => {
+                for (int i = 0; i < Frames.Count; i++) {
+                    if (Frames[i] == f.Index) {
+                        Frames.RemoveAt(i);
+                        return;
+                    }
+                }
+            };
+
+            Player.Host.Load(@"C:\GitHub\VapourSynthViewer.NET\test.vpy");
+        }
+
+        protected override void OnClosing(CancelEventArgs e) {
+            base.OnClosing(e);
+            Environment.Exit(0);
+        }
+    }
 }

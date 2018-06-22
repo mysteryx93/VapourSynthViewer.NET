@@ -3,6 +3,9 @@
 		xmlns:ui="clr-namespace:EmergenceGuardian.MediaPlayerUI;assembly=MediaPlayerUI"
 		xmlns:wf="clr-namespace:System.Windows.Forms;assembly=System.Windows.Forms">
 
+	<BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
+	<BitmapImage x:Key='DefaultVideoImage' UriSource='pack://application:,,,/WpfScriptViewer;component/play.png' />
+
 	<Style TargetType="{x:Type local:VsMediaPlayer}" BasedOn="{StaticResource {x:Type ui:MediaPlayerWpf}}" />
 
 	<Style TargetType="{x:Type local:VsMediaPlayerHost}">
@@ -19,7 +22,9 @@
 										<Canvas.Background>
 											<VisualBrush>
 												<VisualBrush.Visual>
-													<Image x:Name="PART_Img" Stretch="None" SnapsToDevicePixels="True" />
+													<Image x:Name="PART_Img" Stretch="None" SnapsToDevicePixels="True"
+															Source="{Binding VideoSource, RelativeSource={RelativeSource TemplatedParent}, Mode=OneWay}"
+															Visibility="{Binding IsVideoVisible, RelativeSource={RelativeSource TemplatedParent}, Converter={StaticResource BooleanToVisibilityConverter}}" />
 												</VisualBrush.Visual>
 											</VisualBrush>
 										</Canvas.Background>
@@ -30,7 +35,9 @@
 									<StackPanel>
 										<Label x:Name="PART_Error" HorizontalAlignment="Center" Margin="12"
 												VerticalAlignment="Center" FontSize="16" Foreground="#FFF35555"
-												FontWeight="Bold" Visibility="Collapsed">
+												FontWeight="Bold"
+												Content="{Binding ErrorMessage, RelativeSource={RelativeSource TemplatedParent}}"
+												Visibility="{Binding IsErrorVisible, RelativeSource={RelativeSource TemplatedParent}, Converter={StaticResource BooleanToVisibilityConverter}}">
 											<Label.Resources>
 												<Style TargetType="TextBlock">
 													<Setter Property="TextWrapping" Value="Wrap" />
