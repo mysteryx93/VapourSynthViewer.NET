@@ -6,7 +6,7 @@
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProjectGuid>{B6E0B2F1-B458-4E9B-953E-E0362FEDF2E4}</ProjectGuid>
     <OutputType>WinExe</OutputType>
-    <RootNamespace>WpfScriptViewer</RootNamespace>
+    <RootNamespace>EmergenceGuardian.WpfScriptViewer</RootNamespace>
     <AssemblyName>WpfScriptViewer</AssemblyName>
     <TargetFrameworkVersion>v4.7.1</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
@@ -79,9 +79,15 @@
     <Prefer32Bit>true</Prefer32Bit>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="Microsoft.Expression.Interactions, Version=4.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Windows.Interactivity.WPF.2.0.20525\lib\net40\Microsoft.Expression.Interactions.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Data" />
     <Reference Include="System.Drawing" />
+    <Reference Include="System.Windows.Interactivity, Version=4.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Windows.Interactivity.WPF.2.0.20525\lib\net40\System.Windows.Interactivity.dll</HintPath>
+    </Reference>
     <Reference Include="System.Xml" />
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="System.Core" />
@@ -100,6 +106,13 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="DelegateCommand.cs" />
+    <Compile Include="ViewModels\MainWindowViewModel.cs" />
+    <Compile Include="PropertyObserver.cs" />
+    <Compile Include="ViewModels\ScriptViewModel.cs" />
+    <Compile Include="TabContentcs.cs" />
+    <Compile Include="ViewModelBase.cs" />
+    <Compile Include="ViewModels\WorkspaceViewModel.cs" />
     <Page Include="MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
@@ -108,17 +121,10 @@
       <DependentUpon>App.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="ViewBoxExtension.cs" />
-    <Compile Include="VsMediaPlayer.cs" />
-    <Compile Include="VsMediaPlayerHost.cs" />
     <Compile Include="MainWindow.xaml.cs">
       <DependentUpon>MainWindow.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
-    <Page Include="Themes\Generic.xaml">
-      <Generator>MSBuild:Compile</Generator>
-      <SubType>Designer</SubType>
-    </Page>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs">
@@ -138,6 +144,7 @@
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
+    <None Include="packages.config" />
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
@@ -150,6 +157,10 @@
     <ProjectReference Include="..\..\MediaPlayerUI.NET\MediaPlayerUI\MediaPlayerUI.csproj">
       <Project>{7bf6711c-d3ea-48cf-bd5d-4b201aa788b5}</Project>
       <Name>MediaPlayerUI</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\VapourSynthUI\VapourSynthUI.csproj">
+      <Project>{0c8cd2f4-3e6e-4c47-9a00-1b482b2848ce}</Project>
+      <Name>VapourSynthUI</Name>
     </ProjectReference>
     <ProjectReference Include="..\VapourSynthViewer.NET\VapourSynthViewer.NET.csproj">
       <Project>{190308e5-8b04-4adf-a393-fddaf5978afb}</Project>

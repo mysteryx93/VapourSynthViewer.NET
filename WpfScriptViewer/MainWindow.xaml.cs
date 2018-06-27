@@ -18,49 +18,51 @@ using System.Windows.Navigation;
 using System.Windows.Shapes;
 using EmergenceGuardian.VapourSynthViewer;
 
-namespace WpfScriptViewer {
+namespace EmergenceGuardian.WpfScriptViewer {
     /// <summary>
     /// Interaction logic for MainWindow.xaml
     /// </summary>
     public partial class MainWindow : Window {
-        //int Pos;
-        //int PosRequested;
-        //VsScriptApi ScriptApi;
-        //VsVideoInfo Vi;
-        //VsOutput output;
-        //VsFormat Format;
-        //int threads = 1;
-        //bool playing = false;
+        public static void Instance(MainWindowViewModel viewModel) {
+            MainWindow F = new MainWindow();
+            F.Show();
+        }
 
         public MainWindow() {
             InitializeComponent();
         }
 
-        List<int> Frames = new List<int>();
+        private void ViewModel_RequestClose(object sender, EventArgs e) => this.Close();
 
         private void Window_Loaded(object sender, RoutedEventArgs e) {
-            //await RunTest();
+            ReadScriptFile(@"C:\GitHub\VapourSynthViewer.NET\test.vpy");
 
-            Player.Host.SetDllPath(@"C:\Program Files (x86)\VapourSynth\core64");
-            Player.Host.LimitFps = true;
-            VsFrame.Requested += (s, f) => {
-                Frames.Add(f);
-            };
-            VsFrame.Deallocated += (s, f) => {
-                for (int i = 0; i < Frames.Count; i++) {
-                    if (Frames[i] == f.Index) {
-                        Frames.RemoveAt(i);
-                        return;
-                    }
-                }
-            };
+            // Player.Host.SetDllPath(@"C:\Program Files (x86)\VapourSynth\core64");
+            // Player.Host.Load(@"C:\GitHub\VapourSynthViewer.NET\test.vpy");
+        }
 
-            Player.Host.Load(@"C:\GitHub\VapourSynthViewer.NET\test.vpy");
+        private void ReadScriptFile(string file) {
+            try {
+                //ScriptText.Text = File.ReadAllText(file);
+            } catch { }
         }
 
         protected override void OnClosing(CancelEventArgs e) {
             base.OnClosing(e);
             Environment.Exit(0);
         }
+
+        private void TabViewer_Selected(object sender, RoutedEventArgs e) {
+            //await Task.Yield(); // Give time to create player control.
+            //TabViewer.DataContext = ScriptText.Text;
+            // PlayerHost.Script = ScriptText.Text;
+        }
+
+        private void TabViewer_Unselected(object sender, RoutedEventArgs e) {
+            //Player.Host.Stop();
+            //await Task.Delay(100);
+            //await Player.Host.UnloadScript();
+        }
+
     }
 }

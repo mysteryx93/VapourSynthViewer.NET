@@ -1,48 +1,36 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.ComponentModel;
-using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
 using EmergenceGuardian.MediaPlayerUI;
 using EmergenceGuardian.VapourSynthViewer;
 
-namespace WpfScriptViewer {
+namespace EmergenceGuardian.VapourSynthUI {
     [TemplatePart(Name = VsMediaPlayerHost.PART_Host, Type = typeof(Grid))]
     [TemplatePart(Name = VsMediaPlayerHost.PART_Img, Type = typeof(Image))]
-    //[TemplatePart(Name = VsMediaPlayerHost.PART_Error, Type = typeof(Label))]
     public class VsMediaPlayerHost : PlayerBase {
         public const string PART_Host = "PART_Host";
         public Grid PartHost => GetTemplateChild(PART_Host) as Grid;
         public const string PART_Img = "PART_Img";
         public Image PartImg => GetTemplateChild(PART_Img) as Image;
-        //public const string PART_Error = "PART_Error";
-        //public Label PartError => GetTemplateChild(PART_Error) as Label;
 
         private int pos;
         private int posRequested;
-        private VsScriptApi scriptApi;
+        private VsScript scriptApi;
         private VsVideoInfo vi;
         private VsOutput output;
         private readonly object outputLock = new object();
         private VsFormat format;
         private int threads = 0;
-        private string source;
         private bool loop = false;
         private bool limitFps = true;
         WriteableBitmap Bmp;
         private bool isPlaying = false;
+        private string autoLoadFile;
+        private string autoLoadScript;
 
         static VsMediaPlayerHost() {
             DefaultStyleKeyProperty.OverrideMetadata(typeof(VsMediaPlayerHost), new FrameworkPropertyMetadata(typeof(VsMediaPlayerHost)));
@@ -57,34 +45,16 @@ namespace WpfScriptViewer {
             if (DesignerProperties.GetIsInDesignMode(this))
                 return;
 
-            Unloaded += UserControl_Unloaded;
-            Dispatcher.ShutdownStarted += (s2, e2) => UserControl_Unloaded(s2, null);
-        }
-
-        private async void UserControl_Unloaded(object sender, RoutedEventArgs e) {
-            if (output != null) {
-                await Task.Yield();
-                lock (outputLock) {
-                    if (output != null) {
-                        output.Dispose();
-                        output = null;
-                        scriptApi.Dispose();
-                        scriptApi = null;
-                    }
-                }
-            }
+            //Unloaded += (s2, e2) => Stop();
+            Dispatcher.ShutdownStarted += (s2, e2) => Stop();
         }
 
         public override FrameworkElement InnerControl => PartHost;
 
-        public override void Load(string source) {
-            Load(source, null);
-        }
-
-        public static DependencyPropertyKey IsVideoVisiblePropertyKey = DependencyProperty.RegisterReadOnly("IsVideoVisible", typeof(bool), typeof(VsMediaPlayerHost),
-            new PropertyMetadata(true));
-        public static DependencyProperty IsVideoVisibleProperty = IsVideoVisiblePropertyKey.DependencyProperty;
-        public bool IsVideoVisible { get => (bool)GetValue(IsVideoVisibleProperty); private set => SetValue(IsVideoVisiblePropertyKey, value); }
+        //public static DependencyPropertyKey IsVideoVisiblePropertyKey = DependencyProperty.RegisterReadOnly("IsVideoVisible", typeof(bool), typeof(VsMediaPlayerHost),
+        //    new PropertyMetadata(true));
+        //public static DependencyProperty IsVideoVisibleProperty = IsVideoVisiblePropertyKey.DependencyProperty;
+        //public bool IsVideoVisible { get => (bool)GetValue(IsVideoVisibleProperty); private set => SetValue(IsVideoVisiblePropertyKey, value); }
 
         public static DependencyPropertyKey IsErrorVisiblePropertyKey = DependencyProperty.RegisterReadOnly("IsErrorVisible", typeof(bool), typeof(VsMediaPlayerHost),
             new PropertyMetadata(false));
@@ -100,6 +70,54 @@ namespace WpfScriptViewer {
             new PropertyMetadata(null));
         public static DependencyProperty VideoSourceProperty = VideoSourcePropertyKey.DependencyProperty;
         public WriteableBitmap VideoSource { get => (WriteableBitmap)GetValue(VideoSourceProperty); private set => SetValue(VideoSourcePropertyKey, value); }
+
+        public static DependencyProperty PathProperty = DependencyProperty.Register("Path", typeof(string), typeof(VsMediaPlayerHost),
+            new PropertyMetadata(null, OnPathChanged, CoercePath));
+        public string Path { get => (string)GetValue(PathProperty); set => SetValue(PathProperty, value); }
+        private static void OnPathChanged(DependencyObject d, DependencyPropertyChangedEventArgs e) {
+            VsMediaPlayerHost P = d as VsMediaPlayerHost;
+            if (DesignerProperties.GetIsInDesignMode(P))
+                return;
+            lock (P.outputLock) {
+                if (e.NewValue == null)
+                    P.Stop();
+                else if (!string.IsNullOrWhiteSpace((string)e.NewValue)) {
+                    P.LoadScript((string)e.NewValue, null);
+                }
+            }
+        }
+        private static object CoercePath(DependencyObject d, object baseValue) {
+            VsMediaPlayerHost P = d as VsMediaPlayerHost;
+            // Path and Script cannot both be set at once.
+            if (P.Script != null)
+                return null;
+            else
+                return baseValue;
+        }
+
+        public static DependencyProperty ScriptProperty = DependencyProperty.Register("Script", typeof(string), typeof(VsMediaPlayerHost),
+            new PropertyMetadata(null, OnScriptChanged));
+        public string Script { get => (string)GetValue(ScriptProperty); set => SetValue(ScriptProperty, value); }
+        private static void OnScriptChanged(DependencyObject d, DependencyPropertyChangedEventArgs e) {
+            VsMediaPlayerHost P = d as VsMediaPlayerHost;
+            if (DesignerProperties.GetIsInDesignMode(P))
+                return;
+            lock (P.outputLock) {
+                if (e.NewValue == null)
+                    P.Stop();
+                else if (!string.IsNullOrWhiteSpace((string)e.NewValue)) {
+                    P.LoadScript(null, (string)e.NewValue);
+                }
+            }
+        }
+        private static object CoerceScript(DependencyObject d, object baseValue) {
+            VsMediaPlayerHost P = d as VsMediaPlayerHost;
+            // Path and Script cannot both be set at once.
+            if (P.Path != null)
+                return null;
+            else
+                return baseValue;
+        }
 
         public override TimeSpan Position {
             get {
@@ -150,7 +168,7 @@ namespace WpfScriptViewer {
                                 posRequested -= output.ClearQueue();
                         }
                     }
-                    InvokePropertyChanged("IsPlaying");
+                    RaisePropertyChanged("IsPlaying");
                 }
             }
         }
@@ -180,7 +198,7 @@ namespace WpfScriptViewer {
             get => loop;
             set {
                 loop = value;
-                InvokePropertyChanged("Loop");
+                RaisePropertyChanged("Loop");
             }
         }
 
@@ -198,7 +216,7 @@ namespace WpfScriptViewer {
                         }
                     }
                 }
-                InvokePropertyChanged("LimitFps");
+                RaisePropertyChanged("LimitFps");
             }
         }
 
@@ -217,21 +235,29 @@ namespace WpfScriptViewer {
         private int GetThreadCount() => threads > 0 ? threads : Environment.ProcessorCount;
 
         public void SetDllPath(string path) {
-            VsScriptApi.SetDllPath(path);
+            VsHelper.SetDllPath(path);
         }
 
-
-
-        public void Load(string source, string title) {
-            this.source = source;
-            if (title == null)
-                Title = System.IO.Path.GetFileName(source);
+        private void LoadScript(string file, string script) {
             try {
                 // Initialize script.
                 lock (outputLock) {
+                    if (output != null) {
+                        // If a script is already running, stop, wait until media is unloaded and re-run LoadScript.
+                        autoLoadFile = file;
+                        autoLoadScript = script;
+                        Stop();
+                        return;
+                    }
+
                     pos = -1;
                     posRequested = 0;
-                    scriptApi = VsScriptApi.LoadFile(source, true);
+                    ErrorMessage = null;
+                    IsErrorVisible = false;
+                    if (script != null)
+                        scriptApi = VsScript.LoadScript(script);
+                    else
+                        scriptApi = VsScript.LoadFile(file);
                     output = scriptApi.GetOutput(0);
                     output.FrameDone += Output_FrameDone;
                     output.FrameReady += Output_FrameReady;
@@ -245,14 +271,18 @@ namespace WpfScriptViewer {
                     LimitFps = LimitFps; // this sets output.MaxFps
                 base.MediaLoaded();
             } catch (Exception ex) {
-                DisplayError(ex.Message);
+                scriptApi?.Dispose();
+                scriptApi = null;
+                output?.Dispose();
+                output = null;
+                DisplayError(ex.InnerException != null ? ex.InnerException.Message : ex.Message);
             }
         }
 
         public void DisplayError(string err) {
             Stop();
             ErrorMessage = err;
-            IsVideoVisible = false;
+            VideoSource = null;
             IsErrorVisible = true;
         }
 
@@ -264,16 +294,23 @@ namespace WpfScriptViewer {
                         output.ClearQueue(async () => {
                             await Dispatcher.BeginInvoke(new Action(() => {
                                 VideoSource = null;
-                                IsVideoVisible = true;
                                 IsErrorVisible = false;
-                                base.MediaUnloaded();
+                                ErrorMessage = null;
                                 Title = null;
-                                Position = TimeSpan.Zero;
                             }));
-                            output.Dispose();
+                            output?.Dispose();
                             output = null;
-                            scriptApi.Dispose();
+                            scriptApi?.Dispose();
                             scriptApi = null;
+                            await Dispatcher.BeginInvoke(new Action(() => {
+                                base.MediaUnloaded();
+                                Position = TimeSpan.Zero;
+                                if (autoLoadFile != null || autoLoadScript != null) {
+                                    LoadScript(autoLoadFile, autoLoadScript);
+                                    autoLoadFile = null;
+                                    autoLoadScript = null;
+                                }
+                            }));
                         });
                     }
                 }
@@ -334,7 +371,7 @@ namespace WpfScriptViewer {
             Dispatcher.Invoke(new Action(() => {
                 try {
                     Bmp.Lock();
-                    VsScriptApi.BitBlt(Bmp.BackBuffer, Bmp.BackBufferStride, plane.Ptr, plane.Stride, plane.Width * 4, plane.Height);
+                    VsHelper.BitBlt(Bmp.BackBuffer, Bmp.BackBufferStride, plane.Ptr, plane.Stride, plane.Width * 4, plane.Height);
                     Bmp.AddDirtyRect(new Int32Rect(0, 0, plane.Width, plane.Height));
                 } finally {
                     Bmp.Unlock();

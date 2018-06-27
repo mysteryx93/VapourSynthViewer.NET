@@ -1,12 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 
-namespace WpfScriptViewer {
+namespace EmergenceGuardian.VapourSynthUI {
 	public static class ViewboxExtensions {
 		public static readonly DependencyProperty MaxZoomFactorProperty =
 			DependencyProperty.RegisterAttached("MaxZoomFactor", typeof(double), typeof(ViewboxExtensions), new PropertyMetadata(1.0, OnMaxZoomFactorChanged));

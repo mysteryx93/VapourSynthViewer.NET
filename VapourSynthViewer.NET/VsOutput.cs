@@ -15,7 +15,7 @@ namespace EmergenceGuardian.VapourSynthViewer {
         private IntPtr apiPtr;
         private IntPtr nodePtr;
         private int nodeIndex;
-        public VsApiInvoke Api { get; private set; }
+        public VsInvokeApi Api { get; private set; }
         private List<VsFrameStatus> queue = new List<VsFrameStatus>();
         private bool isClearingQueue;
         private object displayLock = new object();
@@ -55,7 +55,7 @@ namespace EmergenceGuardian.VapourSynthViewer {
             this.apiPtr = VsInvoke.vsscript_getVSApi2(VsInvoke.VSSCRIPT_API_VERSION);
             if (this.apiPtr == IntPtr.Zero)
                 throw new Exception("Failed to get VapourSynth API.");
-            this.Api = Marshal.PtrToStructure<VsApiInvoke>(this.apiPtr);
+            this.Api = Marshal.PtrToStructure<VsInvokeApi>(this.apiPtr);
         }
 
         public void Dispose() {

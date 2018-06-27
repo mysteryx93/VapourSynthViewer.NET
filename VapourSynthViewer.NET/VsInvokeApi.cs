@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 
 namespace EmergenceGuardian.VapourSynthViewer {
-    public struct VsApiInvoke {
+    public struct VsInvokeApi {
         /// <summary>
         /// VSCore *(VS_CC *createCore)(int threads)
         /// </summary>

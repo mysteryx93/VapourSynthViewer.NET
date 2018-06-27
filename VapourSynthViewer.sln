@@ -9,6 +9,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "VapourSynthViewer.NET", "Va
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MediaPlayerUI", "..\MediaPlayerUI.NET\MediaPlayerUI\MediaPlayerUI.csproj", "{7BF6711C-D3EA-48CF-BD5D-4B201AA788B5}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VapourSynthUI", "VapourSynthUI\VapourSynthUI.csproj", "{0C8CD2F4-3E6E-4C47-9A00-1B482B2848CE}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -55,6 +57,18 @@ Global
 		{7BF6711C-D3EA-48CF-BD5D-4B201AA788B5}.Release|x64.Build.0 = Release|x64
 		{7BF6711C-D3EA-48CF-BD5D-4B201AA788B5}.Release|x86.ActiveCfg = Release|x86
 		{7BF6711C-D3EA-48CF-BD5D-4B201AA788B5}.Release|x86.Build.0 = Release|x86
+		{0C8CD2F4-3E6E-4C47-9A00-1B482B2848CE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0C8CD2F4-3E6E-4C47-9A00-1B482B2848CE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0C8CD2F4-3E6E-4C47-9A00-1B482B2848CE}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{0C8CD2F4-3E6E-4C47-9A00-1B482B2848CE}.Debug|x64.Build.0 = Debug|Any CPU
+		{0C8CD2F4-3E6E-4C47-9A00-1B482B2848CE}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{0C8CD2F4-3E6E-4C47-9A00-1B482B2848CE}.Debug|x86.Build.0 = Debug|Any CPU
+		{0C8CD2F4-3E6E-4C47-9A00-1B482B2848CE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0C8CD2F4-3E6E-4C47-9A00-1B482B2848CE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0C8CD2F4-3E6E-4C47-9A00-1B482B2848CE}.Release|x64.ActiveCfg = Release|Any CPU
+		{0C8CD2F4-3E6E-4C47-9A00-1B482B2848CE}.Release|x64.Build.0 = Release|Any CPU
+		{0C8CD2F4-3E6E-4C47-9A00-1B482B2848CE}.Release|x86.ActiveCfg = Release|Any CPU
+		{0C8CD2F4-3E6E-4C47-9A00-1B482B2848CE}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

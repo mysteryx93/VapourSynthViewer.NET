@@ -8,7 +8,7 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-namespace EmergenceGuardian.WpfScriptViewer.Properties {
+namespace EmergenceGuardian.VapourSynthUI.Properties {
     
     
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]

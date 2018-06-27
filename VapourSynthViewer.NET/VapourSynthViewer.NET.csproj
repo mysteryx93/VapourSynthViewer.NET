@@ -15,4 +15,10 @@
     </UpgradeBackupLocation>
     <OldToolsVersion>2.0</OldToolsVersion>
   </PropertyGroup>
+  <ItemGroup>
+    <None Remove="COMPATBGR32.vpy" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="COMPATBGR32.vpy" />
+  </ItemGroup>
 </Project>
