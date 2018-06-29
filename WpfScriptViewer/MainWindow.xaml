@@ -2,8 +2,8 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:MediaPlayerUI="clr-namespace:EmergenceGuardian.MediaPlayerUI;assembly=MediaPlayerUI"
-        xmlns:VapourSynthUI="clr-namespace:EmergenceGuardian.VapourSynthUI;assembly=VapourSynthUI"
+        xmlns:ui="clr-namespace:EmergenceGuardian.MediaPlayerUI;assembly=MediaPlayerUI"
+        xmlns:vs="clr-namespace:EmergenceGuardian.VapourSynthUI;assembly=VapourSynthUI"
         xmlns:local="clr-namespace:EmergenceGuardian.WpfScriptViewer"
         xmlns:i="http://schemas.microsoft.com/expression/2010/interactivity"
         x:Class="EmergenceGuardian.WpfScriptViewer.MainWindow" mc:Ignorable="d" Title="MainWindow" Height="450"
@@ -23,7 +23,7 @@
         <local:MainWindowViewModel x:Key="ViewModel" RequestClose="ViewModel_RequestClose" />
     </Window.Resources>
     <Grid DataContext="{StaticResource ViewModel}">
-        <TabControl x:Name="Tabs" Margin="0" Style="{StaticResource BorderlessTab}"
+        <TabControl x:Name="Tabs" Margin="0" Style="{StaticResource BorderlessTab}" local:TabControlBehavior.DoNotCacheControls="True"
                 ItemsSource="{Binding ScriptList, Mode=OneWay}" SelectedItem="{Binding SelectedItem}">
             <TabControl.ItemTemplate>
                 <DataTemplate>
@@ -44,11 +44,15 @@
                             Text="{Binding Script, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
                 </DataTemplate>
                 <DataTemplate DataType="{x:Type local:ViewerViewModel}">
-                    <MediaPlayerUI:MediaPlayerWpf x:Name="Player" IsVolumeVisible="False" IsSpeedVisible="False"
-                            IsLoopVisible="False" PositionDisplay="Seconds" PositionBar="{Binding Position, Mode=TwoWay}">
-                        <VapourSynthUI:VsMediaPlayerHost x:Name="PlayerHost" Script="{Binding Script, Mode=OneWay}"
-                                AutoPlay="False" />
-                    </MediaPlayerUI:MediaPlayerWpf>
+                    <ui:MediaPlayerWpf x:Name="Player" IsVolumeVisible="False" IsSpeedVisible="False"
+                            IsLoopVisible="False" PositionDisplay="Seconds">
+                        <vs:VsMediaPlayerHost x:Name="PlayerHost" Script="{Binding Script, Mode=OneWay}"
+                                AutoPlay="False" Position="{Binding Position, Mode=TwoWay}"
+                                ScrollVerticalOffset="{Binding ScrollVerticalOffset, Mode=TwoWay}"
+                                ScrollHorizontalOffset="{Binding ScrollHorizontalOffset, Mode=TwoWay}"
+                                OnMediaLoaded="{local:MethodBinding {StaticResource ViewModel}, Viewer_MediaLoaded}">
+                        </vs:VsMediaPlayerHost>
+                    </ui:MediaPlayerWpf>
                 </DataTemplate>
             </TabControl.Resources>
         </TabControl>

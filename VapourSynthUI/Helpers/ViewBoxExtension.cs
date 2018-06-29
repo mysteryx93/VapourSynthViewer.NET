@@ -11,20 +11,35 @@ namespace EmergenceGuardian.VapourSynthUI {
 			var viewbox = d as Viewbox;
 			if (viewbox == null)
 				return;
-			viewbox.Loaded += OnLoaded;
+			viewbox.Loaded += Viewbox_OnLoaded;
+            viewbox.Unloaded += Viewbox_Unloaded;
 		}
 
-		private static void OnLoaded(object sender, RoutedEventArgs e) {
+        private static void Viewbox_OnLoaded(object sender, RoutedEventArgs e) {
 			var viewbox = sender as Viewbox;
 			var child = viewbox?.Child as FrameworkElement;
 			if (child == null)
 				return;
 
-			child.SizeChanged += (o, args) => CalculateMaxSize(viewbox);
+            child.SizeChanged += Child_SizeChanged;
 			CalculateMaxSize(viewbox);
 		}
 
-		private static void CalculateMaxSize(Viewbox viewbox) {
+        private static void Viewbox_Unloaded(object sender, RoutedEventArgs e) {
+            var viewbox = sender as Viewbox;
+            var child = viewbox?.Child as FrameworkElement;
+            if (child == null)
+                return;
+
+            child.SizeChanged -= Child_SizeChanged;
+        }
+
+        private static void Child_SizeChanged(object sender, SizeChangedEventArgs e) {
+            Viewbox Parent = (sender as Control)?.Parent as Viewbox;
+            CalculateMaxSize(Parent);
+        }
+
+        private static void CalculateMaxSize(Viewbox viewbox) {
 			var child = viewbox.Child as FrameworkElement;
 			if (child == null)
 				return;

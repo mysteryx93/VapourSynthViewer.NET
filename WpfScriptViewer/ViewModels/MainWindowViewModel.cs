@@ -12,18 +12,41 @@ namespace EmergenceGuardian.WpfScriptViewer {
         public ObservableCollection<ScriptViewModel> ScriptList { get; private set; } = new ObservableCollection<ScriptViewModel>();
         public EditorViewModel EditorModel { get; private set; } = new EditorViewModel("Script");
         public RunViewModel RunModel { get; private set; } = new RunViewModel("Run");
-        public 
-        PropertyObserver<ScriptViewModel> Observer;
-
+        public PropertyObserver<ScriptViewModel> Observer;
+        private TimeSpan playerPosition;
+        private double playerVerticalOffset = 100;
+        private double playerHorizontalOffset = 20;
         private ScriptViewModel selectedItem;
+
         public ScriptViewModel SelectedItem {
             get => selectedItem;
             set {
+                // If we had a viewer tab selected, keep its position for other tabs.
+                if (selectedItem is ViewerViewModel) {
+                    playerPosition = selectedItem.Position;
+                    playerVerticalOffset = selectedItem.ScrollVerticalOffset;
+                    playerHorizontalOffset = selectedItem.ScrollHorizontalOffset;
+                }
+                if (value is ViewerViewModel) {
+                    value.Position = playerPosition;
+                    value.ScrollVerticalOffset = playerVerticalOffset;
+                    value.ScrollHorizontalOffset = playerHorizontalOffset;
+                }
+
                 selectedItem = value;
                 RaisePropertyChanged("SelectedItem");
                 TabSelectionChanged();
             }
         }
+
+        //public TimeSpan PlayerPosition {
+        //    get => playerPosition;
+        //    set {
+        //        playerPosition = value;
+        //        if (SelectedItem is ViewerViewModel)
+        //            (SelectedItem as ViewerViewModel).Position = value;
+        //    }
+        //}
 
         public MainWindowViewModel() {
             ScriptList.Add(EditorModel);
@@ -69,9 +92,16 @@ namespace EmergenceGuardian.WpfScriptViewer {
             SelectedItem = Viewer;
         }
 
+        public void Viewer_MediaLoaded() {
+            if (selectedItem is ViewerViewModel)
+                SelectedItem.Position = playerPosition;
+        }
+
         private void Viewer_RequestClose(object sender, EventArgs e) {
+            ScriptViewModel Model = sender as ScriptViewModel;
+            Model.Script = null;
             // Remove and select previous tab.
-            int Pos = ScriptList.IndexOf(sender as ScriptViewModel);
+            int Pos = ScriptList.IndexOf(Model);
             SelectedItem = ScriptList[Pos - 1];
             ScriptList.RemoveAt(Pos);
         }

@@ -47,6 +47,7 @@
     <Reference Include="PresentationFramework" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Helpers\LinqToVisualTree.cs" />
     <Compile Include="Properties\AssemblyInfo.cs">
       <SubType>Code</SubType>
     </Compile>
@@ -60,8 +61,8 @@
       <DependentUpon>Settings.settings</DependentUpon>
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
     </Compile>
-    <Compile Include="ViewBoxExtension.cs" />
-    <None Include="VsMediaPlayer2.cs" />
+    <Compile Include="Helpers\ScrollViewerBinding.cs" />
+    <Compile Include="Helpers\ViewBoxExtension.cs" />
     <Compile Include="VsMediaPlayerHost.cs" />
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>

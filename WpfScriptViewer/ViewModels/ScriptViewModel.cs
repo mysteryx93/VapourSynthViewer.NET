@@ -8,6 +8,8 @@ namespace EmergenceGuardian.WpfScriptViewer {
     public class ScriptViewModel : WorkspaceViewModel {
         private string script;
         private TimeSpan position;
+        private double scrollVerticalOffset;
+        private double scrollHorizontalOffset;
 
         public ScriptViewModel() { }
         public ScriptViewModel(string displayName, bool canClose) : base(displayName, canClose) { }
@@ -27,6 +29,22 @@ namespace EmergenceGuardian.WpfScriptViewer {
                 RaisePropertyChanged("Position");
             }
         }
+
+        public double ScrollVerticalOffset {
+            get => scrollHorizontalOffset;
+            set {
+                scrollHorizontalOffset = value;
+                RaisePropertyChanged("ScrollVerticalOffset");
+            }
+        }
+
+        public double ScrollHorizontalOffset {
+            get => scrollHorizontalOffset;
+            set {
+                scrollHorizontalOffset = value;
+                RaisePropertyChanged("ScrollHorizontalOffset");
+            }
+        }
     }
 
     public class EditorViewModel : ScriptViewModel {
@@ -36,6 +54,8 @@ namespace EmergenceGuardian.WpfScriptViewer {
     public class ViewerViewModel : ScriptViewModel {
         public ViewerViewModel() { }
         public ViewerViewModel(string displayName) : base(displayName, true) { }
+
+
     }
     public class RunViewModel : ScriptViewModel {
         public RunViewModel() { }

@@ -14,7 +14,9 @@
                         <Grid>
                             <Grid x:Name="PART_Host">
                                 <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto"
-                                        Focusable="False">
+                                        Focusable="False"
+                                        local:ScrollViewerBinding.VerticalOffset="{Binding ScrollVerticalOffset, RelativeSource={RelativeSource TemplatedParent}}"
+                                        local:ScrollViewerBinding.HorizontalOffset="{Binding ScrollHorizontalOffset, RelativeSource={RelativeSource TemplatedParent}}">
                                     <Canvas Width="{Binding ActualWidth, ElementName=PART_Img}"
                                             Height="{Binding ActualHeight, ElementName=PART_Img}">
                                         <Canvas.Background>

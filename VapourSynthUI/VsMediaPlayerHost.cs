@@ -12,72 +12,110 @@ namespace EmergenceGuardian.VapourSynthUI {
     [TemplatePart(Name = VsMediaPlayerHost.PART_Host, Type = typeof(Grid))]
     [TemplatePart(Name = VsMediaPlayerHost.PART_Img, Type = typeof(Image))]
     public class VsMediaPlayerHost : PlayerBase {
+
+        #region Declarations / Constructor
+
+        static VsMediaPlayerHost() {
+            DefaultStyleKeyProperty.OverrideMetadata(typeof(VsMediaPlayerHost), new FrameworkPropertyMetadata(typeof(VsMediaPlayerHost)));
+        }
+
         public const string PART_Host = "PART_Host";
         public Grid PartHost => GetTemplateChild(PART_Host) as Grid;
         public const string PART_Img = "PART_Img";
         public Image PartImg => GetTemplateChild(PART_Img) as Image;
 
-        private int pos;
         private int posRequested;
         private VsScript scriptApi;
         private VsVideoInfo vi;
         private VsOutput output;
         private readonly object outputLock = new object();
         private VsFormat format;
-        private int threads = 0;
-        private bool loop = false;
-        private bool limitFps = true;
         WriteableBitmap Bmp;
-        private bool isPlaying = false;
         private string autoLoadFile;
         private string autoLoadScript;
+        bool isShutdownAttached = false;
 
-        static VsMediaPlayerHost() {
-            DefaultStyleKeyProperty.OverrideMetadata(typeof(VsMediaPlayerHost), new FrameworkPropertyMetadata(typeof(VsMediaPlayerHost)));
-        }
+        #endregion
 
-        public VsMediaPlayerHost() {
-        }
 
-        public override void OnApplyTemplate() {
-            base.OnApplyTemplate();
+        #region Properties
 
-            if (DesignerProperties.GetIsInDesignMode(this))
-                return;
-
-            //Unloaded += (s2, e2) => Stop();
-            Dispatcher.ShutdownStarted += (s2, e2) => Stop();
-        }
-
-        public override FrameworkElement InnerControl => PartHost;
-
-        //public static DependencyPropertyKey IsVideoVisiblePropertyKey = DependencyProperty.RegisterReadOnly("IsVideoVisible", typeof(bool), typeof(VsMediaPlayerHost),
-        //    new PropertyMetadata(true));
-        //public static DependencyProperty IsVideoVisibleProperty = IsVideoVisiblePropertyKey.DependencyProperty;
-        //public bool IsVideoVisible { get => (bool)GetValue(IsVideoVisibleProperty); private set => SetValue(IsVideoVisiblePropertyKey, value); }
-
-        public static DependencyPropertyKey IsErrorVisiblePropertyKey = DependencyProperty.RegisterReadOnly("IsErrorVisible", typeof(bool), typeof(VsMediaPlayerHost),
+        // IsErrorVisible
+        public static readonly DependencyPropertyKey IsErrorVisiblePropertyKey = DependencyProperty.RegisterReadOnly("IsErrorVisible", typeof(bool), typeof(VsMediaPlayerHost),
             new PropertyMetadata(false));
-        public static DependencyProperty IsErrorVisibleProperty = IsErrorVisiblePropertyKey.DependencyProperty;
-        public bool IsErrorVisible { get => (bool)GetValue(IsErrorVisibleProperty); private set => SetValue(IsErrorVisiblePropertyKey, value); }
+        private static readonly DependencyProperty IsErrorVisibleProperty = IsErrorVisiblePropertyKey.DependencyProperty;
+        public bool IsErrorVisible { get => (bool)GetValue(IsErrorVisibleProperty); protected set => SetValue(IsErrorVisiblePropertyKey, value); }
 
-        public static DependencyPropertyKey ErrorMessagePropertyKey = DependencyProperty.RegisterReadOnly("ErrorMessage", typeof(string), typeof(VsMediaPlayerHost),
+        // ErrorMessage
+        public static readonly DependencyPropertyKey ErrorMessagePropertyKey = DependencyProperty.RegisterReadOnly("ErrorMessage", typeof(string), typeof(VsMediaPlayerHost),
             new PropertyMetadata(null));
-        public static DependencyProperty ErrorMessageProperty = ErrorMessagePropertyKey.DependencyProperty;
-        public string ErrorMessage { get => (string)GetValue(ErrorMessageProperty); private set => SetValue(ErrorMessagePropertyKey, value); }
+        private static readonly DependencyProperty ErrorMessageProperty = ErrorMessagePropertyKey.DependencyProperty;
+        public string ErrorMessage { get => (string)GetValue(ErrorMessageProperty); protected set => SetValue(ErrorMessagePropertyKey, value); }
 
-        public static DependencyPropertyKey VideoSourcePropertyKey = DependencyProperty.RegisterReadOnly("VideoSource", typeof(WriteableBitmap), typeof(VsMediaPlayerHost),
+        // VideoSource
+        public static readonly DependencyPropertyKey VideoSourcePropertyKey = DependencyProperty.RegisterReadOnly("VideoSource", typeof(WriteableBitmap), typeof(VsMediaPlayerHost),
             new PropertyMetadata(null));
-        public static DependencyProperty VideoSourceProperty = VideoSourcePropertyKey.DependencyProperty;
-        public WriteableBitmap VideoSource { get => (WriteableBitmap)GetValue(VideoSourceProperty); private set => SetValue(VideoSourcePropertyKey, value); }
+        private static readonly DependencyProperty VideoSourceProperty = VideoSourcePropertyKey.DependencyProperty;
+        public WriteableBitmap VideoSource { get => (WriteableBitmap)GetValue(VideoSourceProperty); protected set => SetValue(VideoSourcePropertyKey, value); }
 
-        public static DependencyProperty PathProperty = DependencyProperty.Register("Path", typeof(string), typeof(VsMediaPlayerHost),
-            new PropertyMetadata(null, OnPathChanged, CoercePath));
+        // LimitFps
+        public static readonly DependencyProperty LimitFpsProperty = DependencyProperty.Register("LimitFps", typeof(bool), typeof(VsMediaPlayerHost),
+            new PropertyMetadata(true, LimitFpsChanged));
+        public bool LimitFps { get => (bool)GetValue(LimitFpsProperty); set => SetValue(LimitFpsProperty, value); }
+        private static void LimitFpsChanged(DependencyObject d, DependencyPropertyChangedEventArgs e) {
+            VsMediaPlayerHost P = d as VsMediaPlayerHost;
+            P.LimitFpsChanged((bool)e.NewValue);
+        }
+        protected void LimitFpsChanged(bool value) {
+            if (output != null) {
+                lock (output) {
+                    if (output != null && vi != null) {
+                        if (LimitFps && vi.FpsDen > 0)
+                            output.MaxFps = (double)vi.FpsNum / vi.FpsDen;
+                        else
+                            output.MaxFps = 0;
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the amount of threads to use for processing. 0 to use ProcessorCount.
+        /// </summary>
+        public int Threads { get => (int)GetValue(ThreadsProperty); set => SetValue(ThreadsProperty, value); }
+        public static readonly DependencyProperty ThreadsProperty = DependencyProperty.Register("Threads", typeof(int), typeof(VsMediaPlayerHost),
+            new PropertyMetadata(0, ThreadsChanged, CoerceThreads));
+        private static void ThreadsChanged(DependencyObject d, DependencyPropertyChangedEventArgs e) {
+            VsMediaPlayerHost P = d as VsMediaPlayerHost;
+            if (P.output != null) {
+                lock (P.output) {
+                    if (P.output != null) {
+                        P.output.SetThreadCount(P.GetThreadCount());
+                    }
+                }
+            }
+        }
+        private static object CoerceThreads(DependencyObject d, object baseValue) => Math.Max((int)baseValue, 0);
+
+        // ScrollVerticalOffset
+        public static readonly DependencyProperty ScrollVerticalOffsetProperty = DependencyProperty.Register("ScrollVerticalOffset", typeof(double), typeof(VsMediaPlayerHost),
+            new PropertyMetadata(0.0));
+        public double ScrollVerticalOffset { get => (double)GetValue(ScrollVerticalOffsetProperty); set => SetValue(ScrollVerticalOffsetProperty, value); }
+
+        // ScrollHorizontalOffset
+        public static readonly DependencyProperty ScrollHorizontalOffsetProperty = DependencyProperty.Register("ScrollHorizontalOffset", typeof(double), typeof(VsMediaPlayerHost),
+            new PropertyMetadata(0.0));
+        public double ScrollHorizontalOffset { get => (double)GetValue(ScrollHorizontalOffsetProperty); set => SetValue(ScrollHorizontalOffsetProperty, value); }
+
+        // Path
+        public static readonly DependencyProperty PathProperty = DependencyProperty.Register("Path", typeof(string), typeof(VsMediaPlayerHost),
+            new PropertyMetadata(null, PathChanged, CoercePath));
         public string Path { get => (string)GetValue(PathProperty); set => SetValue(PathProperty, value); }
-        private static void OnPathChanged(DependencyObject d, DependencyPropertyChangedEventArgs e) {
+        private static async void PathChanged(DependencyObject d, DependencyPropertyChangedEventArgs e) {
             VsMediaPlayerHost P = d as VsMediaPlayerHost;
             if (DesignerProperties.GetIsInDesignMode(P))
                 return;
+            await Task.Yield();
             lock (P.outputLock) {
                 if (e.NewValue == null)
                     P.Stop();
@@ -95,13 +133,15 @@ namespace EmergenceGuardian.VapourSynthUI {
                 return baseValue;
         }
 
-        public static DependencyProperty ScriptProperty = DependencyProperty.Register("Script", typeof(string), typeof(VsMediaPlayerHost),
-            new PropertyMetadata(null, OnScriptChanged));
+        // Script
+        public static readonly DependencyProperty ScriptProperty = DependencyProperty.Register("Script", typeof(string), typeof(VsMediaPlayerHost),
+            new PropertyMetadata(null, ScriptChanged));
         public string Script { get => (string)GetValue(ScriptProperty); set => SetValue(ScriptProperty, value); }
-        private static void OnScriptChanged(DependencyObject d, DependencyPropertyChangedEventArgs e) {
+        private static async void ScriptChanged(DependencyObject d, DependencyPropertyChangedEventArgs e) {
             VsMediaPlayerHost P = d as VsMediaPlayerHost;
             if (DesignerProperties.GetIsInDesignMode(P))
                 return;
+            await Task.Yield();
             lock (P.outputLock) {
                 if (e.NewValue == null)
                     P.Stop();
@@ -119,18 +159,54 @@ namespace EmergenceGuardian.VapourSynthUI {
                 return baseValue;
         }
 
-        public override TimeSpan Position {
-            get {
-                lock (outputLock) {
-                    return TimeSpan.FromSeconds(pos);
-                }
+        #endregion
+
+
+        #region Overrides
+
+        public override FrameworkElement InnerControl => PartHost;
+
+        /// <summary>
+        /// Occurs when the template is being applied.
+        /// </summary>
+        public override void OnApplyTemplate() {
+            base.OnApplyTemplate();
+
+            // Note: this event could happen more than once if switching theme.
+            if (!DesignerProperties.GetIsInDesignMode(this) && !isShutdownAttached) {
+                Unloaded += (s2, e2) => {
+                    Dispatcher.ShutdownStarted -= Dispatcher_ShutdownStarted;
+                    //Stop();
+                    isShutdownAttached = false;
+                };
+                Dispatcher.ShutdownStarted += Dispatcher_ShutdownStarted;
+                isShutdownAttached = true;
             }
-            set {
+        }
+
+        private void Dispatcher_ShutdownStarted(object sender, EventArgs e) {
+            Stop();
+        }
+
+        /// <summary>
+        /// Round position to seconds.
+        /// </summary>
+        protected override TimeSpan CoercePosition(TimeSpan value) {
+            value = base.CoercePosition(value);
+            return TimeSpan.FromSeconds((int)value.TotalSeconds);
+        }
+
+        /// <summary>
+        /// Seeks to specified position when isSeeking is true.
+        /// </summary>
+        /// <param name="value">The position to seek to.</param>
+        /// <param name="isSeeking">Whether the position change is a manual seek.</param>
+        protected override void PositionChanged(TimeSpan value, bool isSeeking) {
+            if (isSeeking) {
                 lock (outputLock) {
                     if (output != null && IsMediaLoaded) {
                         int NewPos = (int)value.TotalSeconds;
                         if (posRequested != NewPos) {
-                            pos = NewPos;
                             posRequested = NewPos;
                             output.ClearQueue();
                             if (IsPlaying)
@@ -139,153 +215,34 @@ namespace EmergenceGuardian.VapourSynthUI {
                                 AddToQueue(true);
                         }
                     } else {
-                        pos = (int)value.TotalSeconds;
                         posRequested = (int)value.TotalSeconds;
                     }
                 }
-                base.PositionChanged();
             }
+            base.PositionChanged(value, isSeeking);
         }
-
-        public override TimeSpan Duration {
-            get => TimeSpan.FromSeconds(vi?.NumFrames ?? 1);
-        }
-
-        public override bool IsPlaying {
-            get {
+        
+        /// <summary>
+        /// Pauses or resumes playback.
+        /// </summary>
+        /// <param name="value">True to resume, false to pause.</param>
+        protected override void IsPlayingChanged(bool value) {
+            if (output != null) {
                 lock (outputLock) {
-                    return isPlaying;
-                }
-            }
-            set {
-                if (output != null) {
-                    lock (outputLock) {
-                        if (output != null) {
-                            isPlaying = value;
-                            if (value)
-                                FillQueue();
-                            else
-                                posRequested -= output.ClearQueue();
-                        }
-                    }
-                    RaisePropertyChanged("IsPlaying");
-                }
-            }
-        }
-
-        public override int Volume {
-            get => 0;
-            set {
-                //InvokePropertyChanged("Volume");
-            }
-        }
-
-        public override int SpeedInt {
-            get => 0;
-            set {
-                //InvokePropertyChanged("SpeedInt");
-            }
-        }
-
-        public override float SpeedFloat {
-            get => 1;
-            set {
-                //InvokePropertyChanged("SpeedFloat");
-            }
-        }
-
-        public override bool Loop {
-            get => loop;
-            set {
-                loop = value;
-                RaisePropertyChanged("Loop");
-            }
-        }
-
-        public bool LimitFps {
-            get => limitFps;
-            set {
-                limitFps = value;
-                if (output != null) {
-                    lock (output) {
-                        if (output != null && vi != null) {
-                            if (limitFps && vi.FpsDen > 0)
-                                output.MaxFps = (double)vi.FpsNum / vi.FpsDen;
-                            else
-                                output.MaxFps = 0;
-                        }
+                    if (output != null) {
+                        if (value)
+                            FillQueue();
+                        else
+                            posRequested -= output.ClearQueue();
                     }
                 }
-                RaisePropertyChanged("LimitFps");
             }
+            base.IsPlayingChanged(value);
         }
 
         /// <summary>
-        /// Gets or sets the amount of threads to use for processing. 0 to use ProcessorCount.
+        /// Stops playback and unloads file.
         /// </summary>
-        public int Threads {
-            get => threads;
-            set {
-                if (value < 0)
-                    throw new ArgumentException("Threads cannot be negative.");
-                threads = value;
-            }
-        }
-
-        private int GetThreadCount() => threads > 0 ? threads : Environment.ProcessorCount;
-
-        public void SetDllPath(string path) {
-            VsHelper.SetDllPath(path);
-        }
-
-        private void LoadScript(string file, string script) {
-            try {
-                // Initialize script.
-                lock (outputLock) {
-                    if (output != null) {
-                        // If a script is already running, stop, wait until media is unloaded and re-run LoadScript.
-                        autoLoadFile = file;
-                        autoLoadScript = script;
-                        Stop();
-                        return;
-                    }
-
-                    pos = -1;
-                    posRequested = 0;
-                    ErrorMessage = null;
-                    IsErrorVisible = false;
-                    if (script != null)
-                        scriptApi = VsScript.LoadScript(script);
-                    else
-                        scriptApi = VsScript.LoadFile(file);
-                    output = scriptApi.GetOutput(0);
-                    output.FrameDone += Output_FrameDone;
-                    output.FrameReady += Output_FrameReady;
-                    vi = output.VideoInfo;
-                    format = vi.Format;
-                    output.SetThreadCount(GetThreadCount());
-                }
-                Bmp = new WriteableBitmap(vi.Width, vi.Height, 96, 96, PixelFormats.Bgr32, null);
-                VideoSource = Bmp;
-                if (LimitFps)
-                    LimitFps = LimitFps; // this sets output.MaxFps
-                base.MediaLoaded();
-            } catch (Exception ex) {
-                scriptApi?.Dispose();
-                scriptApi = null;
-                output?.Dispose();
-                output = null;
-                DisplayError(ex.InnerException != null ? ex.InnerException.Message : ex.Message);
-            }
-        }
-
-        public void DisplayError(string err) {
-            Stop();
-            ErrorMessage = err;
-            VideoSource = null;
-            IsErrorVisible = true;
-        }
-
         public override void Stop() {
             base.Stop();
             if (output != null) {
@@ -304,7 +261,7 @@ namespace EmergenceGuardian.VapourSynthUI {
                             scriptApi = null;
                             await Dispatcher.BeginInvoke(new Action(() => {
                                 base.MediaUnloaded();
-                                Position = TimeSpan.Zero;
+                                SetPositionNoSeek(TimeSpan.Zero);
                                 if (autoLoadFile != null || autoLoadScript != null) {
                                     LoadScript(autoLoadFile, autoLoadScript);
                                     autoLoadFile = null;
@@ -317,8 +274,80 @@ namespace EmergenceGuardian.VapourSynthUI {
             }
         }
 
-        public void StopCallback() {
+        #endregion
 
+
+        #region VapourSynth
+
+        /// <summary>
+        /// Returns the amount of processing threads to use, defined by Threads. If 0, use ProcessorCount.
+        /// </summary>
+        private int GetThreadCount() => Threads > 0 ? Threads : Environment.ProcessorCount;
+
+        /// <summary>
+        /// Sets the path where to load VapourSynth DLLs.
+        /// </summary>
+        /// <param name="path">The path containing VapourSynth DLLs.</param>
+        public void SetDllPath(string path) {
+            VsHelper.SetDllPath(path);
+        }
+
+        /// <summary>
+        /// Displays specified error message.
+        /// </summary>
+        /// <param name="err">The error to display.</param>
+        public void DisplayError(string err) {
+            Stop();
+            ErrorMessage = err;
+            VideoSource = null;
+            IsErrorVisible = true;
+        }
+
+        /// <summary>
+        /// Loads specified file or script and starts playback. You can only specify one of the two argument.
+        /// </summary>
+        /// <param name="file">The file path to load.</param>
+        /// <param name="script">The script text to load.</param>
+        private void LoadScript(string file, string script) {
+            try {
+                // Initialize script.
+                lock (outputLock) {
+                    if (output != null) {
+                        // If a script is already running, stop, wait until media is unloaded and re-run LoadScript.
+                        autoLoadFile = file;
+                        autoLoadScript = script;
+                        Stop();
+                        return;
+                    }
+
+                    SetPositionNoSeek(TimeSpan.FromSeconds(-1));
+                    Duration = TimeSpan.FromSeconds(1);
+                    posRequested = 0;
+                    ErrorMessage = null;
+                    IsErrorVisible = false;
+                    if (script != null)
+                        scriptApi = VsScript.LoadScript(script);
+                    else
+                        scriptApi = VsScript.LoadFile(file);
+                    output = scriptApi.GetOutput(0);
+                    output.FrameDone += Output_FrameDone;
+                    output.FrameReady += Output_FrameReady;
+                    vi = output.VideoInfo;
+                    Duration = TimeSpan.FromSeconds(vi.NumFrames - 1);
+                    format = vi.Format;
+                    output.SetThreadCount(GetThreadCount());
+                }
+                Bmp = new WriteableBitmap(vi.Width, vi.Height, 96, 96, PixelFormats.Bgr32, null);
+                VideoSource = Bmp;
+                LimitFpsChanged(LimitFps);
+                base.MediaLoaded();
+            } catch (Exception ex) {
+                scriptApi?.Dispose();
+                scriptApi = null;
+                output?.Dispose();
+                output = null;
+                DisplayError(ex.InnerException != null ? ex.InnerException.Message : ex.Message);
+            }
         }
 
         // This function is guaranteed to be called only once at a time.
@@ -339,7 +368,7 @@ namespace EmergenceGuardian.VapourSynthUI {
             if (output != null) {
                 lock (outputLock) {
                     if (output != null) {
-                        if ((force || IsPlaying) && posRequested + 1 < vi.NumFrames)
+                        if ((force || IsPlaying) && posRequested < vi.NumFrames)
                             output?.GetFrameAsync(posRequested++);
                     }
                 }
@@ -352,10 +381,12 @@ namespace EmergenceGuardian.VapourSynthUI {
                     return;
             }
 
-            if (e.Error == null)
-                AddToQueue(false);
-            else
-                DisplayError(e.Error);
+            Dispatcher.Invoke(() => {
+                if (e.Error == null)
+                    AddToQueue(false);
+                else
+                    DisplayError(e.Error);
+            });
         }
 
         // This callback is guaranteed to be raised in the same order as requested.
@@ -365,7 +396,6 @@ namespace EmergenceGuardian.VapourSynthUI {
                     return;
             }
 
-            pos = e.Index;
             VsPlane plane = e.Frame.GetPlane(0);
 
             Dispatcher.Invoke(new Action(() => {
@@ -376,8 +406,11 @@ namespace EmergenceGuardian.VapourSynthUI {
                 } finally {
                     Bmp.Unlock();
                 }
-                base.PositionChanged();
+                SetPositionNoSeek(TimeSpan.FromSeconds(e.Index));
             }));
         }
+
+        #endregion
+
     }
 }

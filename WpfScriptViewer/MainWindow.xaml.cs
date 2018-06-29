@@ -17,6 +17,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 using EmergenceGuardian.VapourSynthViewer;
+using EmergenceGuardian.VapourSynthUI;
 
 namespace EmergenceGuardian.WpfScriptViewer {
     /// <summary>
@@ -32,10 +33,13 @@ namespace EmergenceGuardian.WpfScriptViewer {
             InitializeComponent();
         }
 
+        public MainWindowViewModel ViewModel => FindResource("ViewModel") as MainWindowViewModel;
+
         private void ViewModel_RequestClose(object sender, EventArgs e) => this.Close();
 
         private void Window_Loaded(object sender, RoutedEventArgs e) {
-            ReadScriptFile(@"C:\GitHub\VapourSynthViewer.NET\test.vpy");
+            if (!DesignerProperties.GetIsInDesignMode(this))
+                ReadScriptFile(@"C:\GitHub\VapourSynthViewer.NET\test.vpy");
 
             // Player.Host.SetDllPath(@"C:\Program Files (x86)\VapourSynth\core64");
             // Player.Host.Load(@"C:\GitHub\VapourSynthViewer.NET\test.vpy");
@@ -52,17 +56,19 @@ namespace EmergenceGuardian.WpfScriptViewer {
             Environment.Exit(0);
         }
 
-        private void TabViewer_Selected(object sender, RoutedEventArgs e) {
-            //await Task.Yield(); // Give time to create player control.
-            //TabViewer.DataContext = ScriptText.Text;
-            // PlayerHost.Script = ScriptText.Text;
-        }
+        private T FindVisualChildByName<T>(DependencyObject parent, string name) where T : FrameworkElement {
+            T child = default(T);
+            for (int i = 0; i < VisualTreeHelper.GetChildrenCount(parent); i++) {
+                var ch = VisualTreeHelper.GetChild(parent, i);
+                child = ch as T;
+                if (child != null && child.Name == name)
+                    break;
+                else
+                    child = FindVisualChildByName<T>(ch, name);
 
-        private void TabViewer_Unselected(object sender, RoutedEventArgs e) {
-            //Player.Host.Stop();
-            //await Task.Delay(100);
-            //await Player.Host.UnloadScript();
+                if (child != null) break;
+            }
+            return child;
         }
-
     }
 }

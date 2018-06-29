@@ -18,7 +18,7 @@ namespace EmergenceGuardian.VapourSynthViewer {
         public VsInvokeApi Api { get; private set; }
         private List<VsFrameStatus> queue = new List<VsFrameStatus>();
         private bool isClearingQueue;
-        private object displayLock = new object();
+        private SemaphoreSlim displaySemaphore = new SemaphoreSlim(1, 1);
         private DateTime displayTime = DateTime.MinValue;
         private double maxFps = 0;
         private TimeSpan maxFpsSpan;
@@ -64,16 +64,10 @@ namespace EmergenceGuardian.VapourSynthViewer {
         }
 
         public double MaxFps {
-            get {
-                lock (displayLock) {
-                    return maxFps;
-                }
-            }
+            get => maxFps;
             set {
-                lock (displayLock) {
-                    maxFps = value;
-                    maxFpsSpan = TimeSpan.FromSeconds(1 / maxFps);
-                }
+                maxFps = value;
+                maxFpsSpan = TimeSpan.FromSeconds(1 / maxFps);
             }
         }
 
@@ -159,7 +153,8 @@ namespace EmergenceGuardian.VapourSynthViewer {
             // Use another lock to ensure frames are displayed in the right order.
             FrameDone?.Invoke(this, Found);
             if (callbackList.Count > 0) {
-                lock (displayLock) {
+                displaySemaphore.Wait();
+                try {
                     // When clearing queue, this is fresh new data after the flush.
                     isClearingQueue = false;
 
@@ -187,6 +182,8 @@ namespace EmergenceGuardian.VapourSynthViewer {
                                 Thread.Sleep(1);
                         }
                     }
+                } finally {
+                    displaySemaphore.Release();
                 }
             }
         }

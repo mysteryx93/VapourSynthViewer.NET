@@ -194,14 +194,16 @@ namespace EmergenceGuardian.WpfScriptViewer {
         }
 
         private static void EnsureContentTemplateIsNotModified(TabControl tabControl) {
-            void OnContentTemplatePropertyChanged(object sender, EventArgs args) {
-                throw new InvalidOperationException(
-                    "Cannot assign to TabControl.ContentTemplate when TabContent.IsCached is True. Use TabContent.Template instead");
-            }
+            // Causes memory leak.
 
-            var descriptor = DependencyPropertyDescriptor.FromProperty(TabControl.ContentTemplateProperty, typeof(TabControl));
-            descriptor.AddValueChanged(tabControl, OnContentTemplatePropertyChanged);
-            tabControl.Unloaded += (sender, args) => descriptor.RemoveValueChanged(tabControl, OnContentTemplatePropertyChanged);
+            //void OnContentTemplatePropertyChanged(object sender, EventArgs args) {
+            //    throw new InvalidOperationException(
+            //        "Cannot assign to TabControl.ContentTemplate when TabContent.IsCached is True. Use TabContent.Template instead");
+            //}
+
+            //var descriptor = DependencyPropertyDescriptor.FromProperty(TabControl.ContentTemplateProperty, typeof(TabControl));
+            //descriptor.AddValueChanged(tabControl, OnContentTemplatePropertyChanged);
+            //tabControl.Unloaded += (sender, args) => descriptor.RemoveValueChanged(tabControl, OnContentTemplatePropertyChanged);
         }
 
         public class ContentManager {

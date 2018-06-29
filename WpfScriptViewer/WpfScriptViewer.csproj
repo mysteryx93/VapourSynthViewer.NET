@@ -106,12 +106,15 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
-    <Compile Include="DelegateCommand.cs" />
+    <Compile Include="Helpers\MethodBindingExtension.cs" />
+    <Compile Include="Helpers\TabControlBehavior.cs" />
+    <Compile Include="PropertyChangeNotifier.cs" />
+    <Compile Include="Helpers\DelegateCommand.cs" />
     <Compile Include="ViewModels\MainWindowViewModel.cs" />
-    <Compile Include="PropertyObserver.cs" />
+    <Compile Include="Helpers\PropertyObserver.cs" />
     <Compile Include="ViewModels\ScriptViewModel.cs" />
-    <Compile Include="TabContentcs.cs" />
-    <Compile Include="ViewModelBase.cs" />
+    <Compile Include="Helpers\TabContentcs.cs" />
+    <Compile Include="ViewModels\ViewModelBase.cs" />
     <Compile Include="ViewModels\WorkspaceViewModel.cs" />
     <Page Include="MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
