@@ -99,12 +99,12 @@ namespace EmergenceGuardian.VapourSynthUI {
 
         // ScrollVerticalOffset
         public static readonly DependencyProperty ScrollVerticalOffsetProperty = DependencyProperty.Register("ScrollVerticalOffset", typeof(double), typeof(VsMediaPlayerHost),
-            new PropertyMetadata(0.0));
+            new PropertyMetadata(-1.0));
         public double ScrollVerticalOffset { get => (double)GetValue(ScrollVerticalOffsetProperty); set => SetValue(ScrollVerticalOffsetProperty, value); }
 
         // ScrollHorizontalOffset
         public static readonly DependencyProperty ScrollHorizontalOffsetProperty = DependencyProperty.Register("ScrollHorizontalOffset", typeof(double), typeof(VsMediaPlayerHost),
-            new PropertyMetadata(0.0));
+            new PropertyMetadata(-1.0));
         public double ScrollHorizontalOffset { get => (double)GetValue(ScrollHorizontalOffsetProperty); set => SetValue(ScrollHorizontalOffsetProperty, value); }
 
         // Path
@@ -159,6 +159,27 @@ namespace EmergenceGuardian.VapourSynthUI {
                 return baseValue;
         }
 
+        // ZoomIncrement
+        public static readonly DependencyProperty ZoomIncrementProperty = DependencyProperty.Register("ZoomIncrement", typeof(double), typeof(VsMediaPlayerHost),
+            new FrameworkPropertyMetadata(1.2, FrameworkPropertyMetadataOptions.AffectsRender | FrameworkPropertyMetadataOptions.AffectsMeasure));
+        public double ZoomIncrement { get => (double)GetValue(ZoomIncrementProperty); set => SetValue(ZoomIncrementProperty, value); }
+
+        // MinZoom
+        public static readonly DependencyProperty MinZoomProperty = DependencyProperty.Register("MinZoom", typeof(double), typeof(VsMediaPlayerHost),
+            new FrameworkPropertyMetadata(0.0, FrameworkPropertyMetadataOptions.AffectsRender | FrameworkPropertyMetadataOptions.AffectsMeasure));
+        public double MinZoom { get => (double)GetValue(MinZoomProperty); set => SetValue(MinZoomProperty, value); }
+
+        // MaxZoom
+        public static readonly DependencyProperty MaxZoomProperty = DependencyProperty.Register("MaxZoom", typeof(double), typeof(VsMediaPlayerHost),
+            new FrameworkPropertyMetadata(0.0, FrameworkPropertyMetadataOptions.AffectsRender | FrameworkPropertyMetadataOptions.AffectsMeasure));
+        public double MaxZoom { get => (double)GetValue(MaxZoomProperty); set => SetValue(MaxZoomProperty, value); }
+
+        // Zoom
+        public static readonly DependencyProperty ZoomProperty = DependencyProperty.Register("Zoom", typeof(double), typeof(VsMediaPlayerHost),
+            new FrameworkPropertyMetadata(1.0, FrameworkPropertyMetadataOptions.AffectsRender | FrameworkPropertyMetadataOptions.AffectsMeasure));
+        private static bool ValidateZoom(object value) => (double)value > 0;
+        public double Zoom { get => (double)GetValue(ZoomProperty); set => SetValue(ZoomProperty, value); }
+
         #endregion
 
 
@@ -176,7 +197,7 @@ namespace EmergenceGuardian.VapourSynthUI {
             if (!DesignerProperties.GetIsInDesignMode(this) && !isShutdownAttached) {
                 Unloaded += (s2, e2) => {
                     Dispatcher.ShutdownStarted -= Dispatcher_ShutdownStarted;
-                    //Stop();
+                    //Stop(); Object can be unloaded for many reasons, we can't stop here.
                     isShutdownAttached = false;
                 };
                 Dispatcher.ShutdownStarted += Dispatcher_ShutdownStarted;
@@ -308,7 +329,7 @@ namespace EmergenceGuardian.VapourSynthUI {
         /// </summary>
         /// <param name="file">The file path to load.</param>
         /// <param name="script">The script text to load.</param>
-        private void LoadScript(string file, string script) {
+        private async void LoadScript(string file, string script) {
             try {
                 // Initialize script.
                 lock (outputLock) {
@@ -341,6 +362,9 @@ namespace EmergenceGuardian.VapourSynthUI {
                 VideoSource = Bmp;
                 LimitFpsChanged(LimitFps);
                 base.MediaLoaded();
+                await Task.Yield();
+                ScrollVerticalOffset = ScrollVerticalOffset;
+                ScrollHorizontalOffset = ScrollHorizontalOffset;
             } catch (Exception ex) {
                 scriptApi?.Dispose();
                 scriptApi = null;

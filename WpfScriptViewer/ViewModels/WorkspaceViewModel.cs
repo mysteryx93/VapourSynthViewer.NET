@@ -1,13 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows;
-using System.Windows.Input;
+using EmergenceGuardian.WpfFramework.Mvvm;
 
 namespace EmergenceGuardian.WpfScriptViewer {
-    public class WorkspaceViewModel : ViewModelBase {
+    public class WorkspaceViewModel : ObserveableObject {
         public WorkspaceViewModel() { }
 
         public WorkspaceViewModel(string displayName, bool canClose) {
@@ -19,8 +14,8 @@ namespace EmergenceGuardian.WpfScriptViewer {
         private bool canClose = true;
         public event EventHandler RequestClose;
 
-        private ICommand closeCommand;
-        public ICommand CloseCommand => InitCommand(ref closeCommand, OnRequestClose, () => CanClose);
+        private DelegateCommand closeCommand;
+        public DelegateCommand CloseCommand => InitCommand(ref closeCommand, OnRequestClose, () => CanClose);
 
         public string DisplayName {
             get => displayName;

@@ -13,7 +13,8 @@ namespace EmergenceGuardian.WpfScriptViewer {
     public partial class App : Application {
         protected override void OnStartup(StartupEventArgs e) {
             base.OnStartup(e);
-            WpfScriptViewer.MainWindow.Instance(new MainWindowViewModel());
+            string OpenFile = e.Args.FirstOrDefault();
+            WpfScriptViewer.MainView.Instance(OpenFile);
         }
     }
 }

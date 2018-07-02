@@ -1,7 +1,8 @@
 <ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:local="clr-namespace:EmergenceGuardian.VapourSynthUI"
-        xmlns:ui="clr-namespace:EmergenceGuardian.MediaPlayerUI;assembly=MediaPlayerUI">
+        xmlns:ui="clr-namespace:EmergenceGuardian.MediaPlayerUI;assembly=MediaPlayerUI"
+        xmlns:wpf="clr-namespace:EmergenceGuardian.WpfFramework;assembly=WpfFramework">
 
     <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
 
@@ -13,24 +14,17 @@
                             BorderThickness="{TemplateBinding BorderThickness}">
                         <Grid>
                             <Grid x:Name="PART_Host">
-                                <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto"
-                                        Focusable="False"
-                                        local:ScrollViewerBinding.VerticalOffset="{Binding ScrollVerticalOffset, RelativeSource={RelativeSource TemplatedParent}}"
-                                        local:ScrollViewerBinding.HorizontalOffset="{Binding ScrollHorizontalOffset, RelativeSource={RelativeSource TemplatedParent}}">
-                                    <Canvas Width="{Binding ActualWidth, ElementName=PART_Img}"
-                                            Height="{Binding ActualHeight, ElementName=PART_Img}">
-                                        <Canvas.Background>
-                                            <VisualBrush>
-                                                <VisualBrush.Visual>
-                                                    <Image x:Name="PART_Img" Stretch="None" SnapsToDevicePixels="True"
-                                                            Source="{Binding VideoSource, RelativeSource={RelativeSource TemplatedParent}, Mode=OneWay}" />
-                                                </VisualBrush.Visual>
-                                            </VisualBrush>
-                                        </Canvas.Background>
-                                    </Canvas>
-                                </ScrollViewer>
-
-                                <Viewbox local:ViewboxExtensions.MaxZoomFactor="2.0" Focusable="False"
+                                <wpf:ZoomViewer
+                                        ScrollVerticalOffset="{Binding ScrollVerticalOffset, RelativeSource={RelativeSource TemplatedParent}, Mode=TwoWay}"
+                                        ScrollHorizontalOffset="{Binding ScrollHorizontalOffset, RelativeSource={RelativeSource TemplatedParent}, Mode=TwoWay}"
+                                        Zoom="{Binding Zoom, RelativeSource={RelativeSource TemplatedParent}, Mode=TwoWay}"
+                                        MinZoom="{Binding MinZoom, RelativeSource={RelativeSource TemplatedParent}, Mode=TwoWay}"
+                                        MaxZoom="{Binding MaxZoom, RelativeSource={RelativeSource TemplatedParent}, Mode=TwoWay}"
+                                        ZoomIncrement="{Binding ZoomIncrement, RelativeSource={RelativeSource TemplatedParent}, Mode=TwoWay}">
+                                    <Image x:Name="PART_Img" Stretch="None" SnapsToDevicePixels="True"
+                                            Source="{Binding VideoSource, RelativeSource={RelativeSource TemplatedParent}, Mode=OneWay}" />
+                                </wpf:ZoomViewer>
+                                <Viewbox wpf:ViewboxExtensions.MaxZoomFactor="2.0" Focusable="False"
                                         Visibility="{Binding IsErrorVisible, RelativeSource={RelativeSource TemplatedParent}, Converter={StaticResource BooleanToVisibilityConverter}}">
                                     <StackPanel>
                                         <Label x:Name="PART_Error" HorizontalAlignment="Center" Margin="12"
@@ -52,4 +46,5 @@
             </Setter.Value>
         </Setter>
     </Style>
+
 </ResourceDictionary>

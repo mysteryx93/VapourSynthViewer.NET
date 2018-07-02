@@ -1,15 +1,12 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace EmergenceGuardian.WpfScriptViewer {
     public class ScriptViewModel : WorkspaceViewModel {
         private string script;
         private TimeSpan position;
-        private double scrollVerticalOffset;
-        private double scrollHorizontalOffset;
+        private string errorMessage;
+        private bool isEditingHeader = false;
+        public bool CanEditHeader { get; protected set; } = false;
 
         public ScriptViewModel() { }
         public ScriptViewModel(string displayName, bool canClose) : base(displayName, canClose) { }
@@ -30,19 +27,19 @@ namespace EmergenceGuardian.WpfScriptViewer {
             }
         }
 
-        public double ScrollVerticalOffset {
-            get => scrollHorizontalOffset;
+        public string ErrorMessage {
+            get => errorMessage;
             set {
-                scrollHorizontalOffset = value;
-                RaisePropertyChanged("ScrollVerticalOffset");
+                errorMessage = value;
+                RaisePropertyChanged("ErrorMessage");
             }
         }
 
-        public double ScrollHorizontalOffset {
-            get => scrollHorizontalOffset;
+        public bool IsEditingHeader {
+            get => isEditingHeader;
             set {
-                scrollHorizontalOffset = value;
-                RaisePropertyChanged("ScrollHorizontalOffset");
+                isEditingHeader = value;
+                RaisePropertyChanged("IsEditingHeader");
             }
         }
     }
@@ -52,10 +49,13 @@ namespace EmergenceGuardian.WpfScriptViewer {
         public EditorViewModel(string displayName) : base(displayName, false) { }
     }
     public class ViewerViewModel : ScriptViewModel {
-        public ViewerViewModel() { }
-        public ViewerViewModel(string displayName) : base(displayName, true) { }
-
-
+        public ViewerViewModel() {
+            CanEditHeader = true;
+        }
+        public ViewerViewModel(string displayName, string script) : base(displayName, true) {
+            this.Script = script;
+            CanEditHeader = true;
+        }
     }
     public class RunViewModel : ScriptViewModel {
         public RunViewModel() { }
