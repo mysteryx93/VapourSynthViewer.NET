@@ -1,6 +1,7 @@
 ﻿using System;
 using System.ComponentModel;
 using System.Windows;
+using EmergenceGuardian.WpfExtensions;
 
 namespace EmergenceGuardian.WpfScriptViewer {
     /// <summary>
@@ -22,7 +23,7 @@ namespace EmergenceGuardian.WpfScriptViewer {
 
         public MainViewModel ViewModel { get; private set; }
         private void ViewModel_RequestClose(object sender, EventArgs e) => this.Close();
-        private void MessageBox_MessageBoxRequest(object sender, WpfFramework.Mvvm.MvvmMessageBoxEventArgs e) => e.Show();
+        private void MessageBox_MessageBoxRequest(object sender, MessageBoxEventArgs e) => e.Show();
 
         protected override void OnClosing(CancelEventArgs e) {
             base.OnClosing(e);

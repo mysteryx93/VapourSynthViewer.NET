@@ -11,7 +11,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MediaPlayerUI", "..\MediaPl
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VapourSynthUI", "VapourSynthUI\VapourSynthUI.csproj", "{0C8CD2F4-3E6E-4C47-9A00-1B482B2848CE}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WpfFramework", "..\EmergenceGuardian.WpfFramework\WpfFramework.csproj", "{1C9E02BD-1D1B-4DD1-B667-CA123B7394F9}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WpfExtensions", "..\EmergenceGuardian.WpfExtensions\WpfExtensions.csproj", "{1C9E02BD-1D1B-4DD1-B667-CA123B7394F9}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

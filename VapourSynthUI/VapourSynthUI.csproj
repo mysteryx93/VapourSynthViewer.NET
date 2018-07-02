@@ -77,9 +77,9 @@
     </Page>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\EmergenceGuardian.WpfFramework\WpfFramework.csproj">
+    <ProjectReference Include="..\..\EmergenceGuardian.WpfExtensions\WpfExtensions.csproj">
       <Project>{1c9e02bd-1d1b-4dd1-b667-ca123b7394f9}</Project>
-      <Name>WpfFramework</Name>
+      <Name>WpfExtensions</Name>
     </ProjectReference>
     <ProjectReference Include="..\..\MediaPlayerUI.NET\MediaPlayerUI\MediaPlayerUI.csproj">
       <Project>{7bf6711c-d3ea-48cf-bd5d-4b201aa788b5}</Project>

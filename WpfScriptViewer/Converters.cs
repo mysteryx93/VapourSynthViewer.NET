@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Globalization;
 using System.Windows.Data;
+using EmergenceGuardian.WpfExtensions;
 
 namespace EmergenceGuardian.WpfScriptViewer {
     /// <summary>
@@ -24,5 +25,9 @@ namespace EmergenceGuardian.WpfScriptViewer {
             else
                 return null;
         }
+    }
+
+    public sealed class MouseCaptureConverter : BooleanConverter<MouseCaptureState> {
+        public MouseCaptureConverter() : base(MouseCaptureState.Mouse, MouseCaptureState.None) { }
     }
 }

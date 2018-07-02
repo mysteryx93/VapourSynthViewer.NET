@@ -2,8 +2,11 @@
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
+using System.Windows.Controls;
 using System.Windows.Input;
-using EmergenceGuardian.WpfFramework.Mvvm;
+using EmergenceGuardian.WpfExtensions;
+using GalaSoft.MvvmLight;
+using GalaSoft.MvvmLight.Command;
 
 namespace EmergenceGuardian.WpfScriptViewer {
     public class MainViewModel : WorkspaceViewModel {
@@ -18,8 +21,8 @@ namespace EmergenceGuardian.WpfScriptViewer {
 
         public MessageBoxManager MessageBox { get; } = new MessageBoxManager();
         public ObservableCollection<ScriptViewModel> ScriptList { get; private set; } = new ObservableCollection<ScriptViewModel>();
-        private EditorViewModel editorModel = new EditorViewModel("Script");
-        private RunViewModel runModel = new RunViewModel("Run");
+        private readonly EditorViewModel editorModel = new EditorViewModel("Script");
+        private readonly RunViewModel runModel = new RunViewModel("Run");
 
         private double scrollVerticalOffset;
         private double scrollHorizontalOffset;
@@ -33,6 +36,7 @@ namespace EmergenceGuardian.WpfScriptViewer {
         // These are bound to the UI.
         public double MinZoom { get; } = 0.1;
         public double MaxZoom { get; } = 10;
+        public double ZoomIncrement { get; } = 1.2;
 
         #endregion
 
@@ -72,7 +76,7 @@ namespace EmergenceGuardian.WpfScriptViewer {
 
                 selectedItem = value;
                 RaisePropertyChanged("SelectedItem");
-                TabSelectionChanged();
+                // TabSelectionChanged();
             }
         }
 
@@ -98,14 +102,9 @@ namespace EmergenceGuardian.WpfScriptViewer {
         public ObservableCollection<string> ZoomList {
             get {
                 if (zoomList == null) {
-                    zoomList = new ObservableCollection<string>();
-                    zoomList.Add("20%");
-                    zoomList.Add("50%");
-                    zoomList.Add("70%");
-                    zoomList.Add("100%");
-                    zoomList.Add("150%");
-                    zoomList.Add("200%");
-                    zoomList.Add("400%");
+                    zoomList = new ObservableCollection<string> {
+                        "20%", "50%", "70%", "100%", "150%", "200%", "400%"
+                    };
                 }
                 return zoomList;
             }
@@ -135,8 +134,8 @@ namespace EmergenceGuardian.WpfScriptViewer {
 
         #region Commands
 
-        private DelegateCommand runCommand;
-        public DelegateCommand RunCommand => InitCommand(ref runCommand, OnRun, CanRun);
+        private RelayCommand runCommand;
+        public RelayCommand RunCommand => this.InitCommand(ref runCommand, OnRun, CanRun);
 
         private bool CanRun() => !string.IsNullOrWhiteSpace(ScriptList.First().Script);
         private void OnRun() {
@@ -152,12 +151,11 @@ namespace EmergenceGuardian.WpfScriptViewer {
             ScriptViewModel Viewer = new ViewerViewModel("Viewer " + ++autoIndex, Script);
             Viewer.RequestClose += Viewer_RequestClose;
             ScriptList.Insert(ScriptList.Count - 1, Viewer);
-            // The new tab is automatically selected, no need to repeat.
-            //SelectedItem = Viewer;
+            SelectedItem = Viewer;
         }
 
-        private DelegateCommand updateAllCommand;
-        public DelegateCommand UpdateAllCommand => InitCommand(ref updateAllCommand, OnUpdateAll, CanUpdateAll);
+        private RelayCommand updateAllCommand;
+        public RelayCommand UpdateAllCommand => this.InitCommand(ref updateAllCommand, OnUpdateAll, CanUpdateAll);
 
         private bool CanUpdateAll() => ScriptList.OfType<ViewerViewModel>().Count() > 1;
         private void OnUpdateAll() {
@@ -168,21 +166,32 @@ namespace EmergenceGuardian.WpfScriptViewer {
             }
         }
 
+        private RelayCommand zoomInCommand;
+        public RelayCommand ZoomInCommand => this.InitCommand(ref zoomInCommand, OnZoomIn, CanZoomIn);
 
+        private bool CanZoomIn() => true;
+        private void OnZoomIn() {
+            Zoom *= ZoomIncrement;
+        }
+
+        private RelayCommand zoomOutCommand;
+        public RelayCommand ZoomOutCommand => this.InitCommand(ref zoomOutCommand, OnZoomOut, CanZoomOut);
+
+        private bool CanZoomOut() => true;
+        private void OnZoomOut() {
+            Zoom /= ZoomIncrement;
+        }
 
         #endregion
 
 
         public void Header_PreviewLeftMouseButtonDown(ScriptViewModel sender, MouseButtonEventArgs e) {
             if (sender == SelectedItem && sender.CanEditHeader) {
-                if (!sender.IsEditingHeader)
+                if (!sender.IsEditingHeader) {
                     sender.IsEditingHeader = true;
+                    e.Handled = true;
+                }
             }
-        }
-
-        public void Header_RemoveFocus() {
-            if (SelectedItem.IsEditingHeader)
-                SelectedItem.IsEditingHeader = false;
         }
 
         public void Header_PreviewKeyDown(ScriptViewModel sender, KeyEventArgs e) {
@@ -192,9 +201,7 @@ namespace EmergenceGuardian.WpfScriptViewer {
             }
         }
 
-
-
-        private void TabSelectionChanged() {
+        public void Tabs_SelectionChanged(SelectionChangedEventArgs e) {
             if (SelectedItem == runModel) {
                 if (CanRun())
                     OnRun();
@@ -223,7 +230,7 @@ namespace EmergenceGuardian.WpfScriptViewer {
                 editorModel.Script = File.ReadAllText(file);
             } catch (Exception ex) {
                 MessageBox.Show(null, ex.Message, "Error loading file");
-                CloseCommand.Execute();
+                CloseCommand.Execute(null);
             }
         }
     }

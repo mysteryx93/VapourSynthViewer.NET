@@ -1,8 +1,9 @@
 ﻿using System;
-using EmergenceGuardian.WpfFramework.Mvvm;
+using GalaSoft.MvvmLight;
+using GalaSoft.MvvmLight.Command;
 
 namespace EmergenceGuardian.WpfScriptViewer {
-    public class WorkspaceViewModel : ObserveableObject {
+    public class WorkspaceViewModel : ObservableObject {
         public WorkspaceViewModel() { }
 
         public WorkspaceViewModel(string displayName, bool canClose) {
@@ -14,8 +15,8 @@ namespace EmergenceGuardian.WpfScriptViewer {
         private bool canClose = true;
         public event EventHandler RequestClose;
 
-        private DelegateCommand closeCommand;
-        public DelegateCommand CloseCommand => InitCommand(ref closeCommand, OnRequestClose, () => CanClose);
+        private RelayCommand closeCommand;
+        public RelayCommand CloseCommand => this.InitCommand(ref closeCommand, OnRequestClose, () => CanClose);
 
         public string DisplayName {
             get => displayName;
