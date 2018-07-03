@@ -36,7 +36,8 @@
                                 Visibility="{Binding CanClose, Converter={StaticResource BooleanToVisibilityConverter}}" />
                         <TextBlock FontSize="18"
                                 PreviewMouseLeftButtonDown="{wpf:MethodBinding {StaticResource ViewModel}, Header_PreviewLeftMouseButtonDown, {Binding}, {wpf:EventArgs}}">
-                            <TextBox Text="{Binding DisplayName}" Height="26" Margin="2,0,-6,0" wpf:SelectTextOnFocus.Active="true" 
+                            <TextBox Text="{Binding DisplayName}" Height="26" Margin="2,0,-6,0"
+                                    wpf:SelectTextOnFocus.Active="true"
                                     wpf:FocusExtension.IsFocused="{Binding IsEditingHeader, Mode=TwoWay, IsAsync=True}"
                                     wpf:MouseCaptureExtension.Capture="{Binding IsEditingHeader, Converter={StaticResource MouseCaptureConverter}, Mode=TwoWay}"
                                     PreviewKeyDown="{wpf:MethodBinding {StaticResource ViewModel}, Header_PreviewKeyDown, {Binding}, {wpf:EventArgs}}"
@@ -49,13 +50,13 @@
             </TabControl.ItemTemplate>
             <TabControl.Resources>
                 <DataTemplate DataType="{x:Type local:EditorViewModel}">
-                    <TextBox x:Name="ScriptText" AcceptsReturn="True" VerticalScrollBarVisibility="Visible" 
+                    <TextBox x:Name="ScriptText" AcceptsReturn="True" VerticalScrollBarVisibility="Visible"
                             HorizontalScrollBarVisibility="Auto" BorderThickness="1"
                             Text="{Binding Script, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" TabIndex="2" />
                 </DataTemplate>
                 <DataTemplate DataType="{x:Type local:ViewerViewModel}">
-                    <ui:MediaPlayerWpf x:Name="Player" IsVolumeVisible="False" IsSpeedVisible="False" IsStopVisible="False"
-                            IsLoopVisible="False" PositionDisplay="Seconds" TabIndex="2">
+                    <ui:MediaPlayerWpf x:Name="Player" IsVolumeVisible="False" IsSpeedVisible="False"
+                            IsStopVisible="False" IsLoopVisible="False" PositionDisplay="Seconds" TabIndex="2">
                         <ui:MediaPlayerWpf.InputBindings>
                             <KeyBinding Key="Space" Command="{Binding UI.PlayPauseCommand, ElementName=Player}" />
                             <KeyBinding Key="Right" Command="{Binding UI.SeekForwardCommand, ElementName=Player}" />
@@ -87,13 +88,14 @@
                 </DataTemplate>
             </TabControl.Resources>
         </TabControl>
-        <CheckBox Height="18" Width="44" Margin="0,9,156,0" HorizontalAlignment="Right" VerticalAlignment="Top"
+        <CheckBox Height="18" Width="44" Margin="0,9,181,0" HorizontalAlignment="Right" VerticalAlignment="Top"
                 Content="MT" ToolTip="Multi-Threaded" TabIndex="5" IsChecked="{Binding IsMultiThreaded}" />
-        <Button Height="22" Width="75" Margin="0,5,80,0" Content="Update All" HorizontalAlignment="Right"
+        <Button Height="22" Width="75" Margin="0,5,105,0" Content="Update All" HorizontalAlignment="Right"
                 VerticalAlignment="Top" ToolTip="Load frame in all tabs" TabIndex="6"
                 Command="{Binding UpdateAllCommand, Mode=OneWay}" />
-        <ComboBox Height="20" Width="64" Margin="0,7,8,0" HorizontalAlignment="Right" FontSize="10"
+        <ComboBox Height="20" Width="64" Margin="0,7,33,0" HorizontalAlignment="Right" FontSize="10"
                 Text="{Binding Zoom, Converter={StaticResource ZoomConverter}, Mode=TwoWay, Source={StaticResource ViewModel}}"
                 VerticalAlignment="Top" ItemsSource="{Binding ZoomList}" IsEditable="True" ToolTip="Zoom" TabIndex="7" />
+        <Button Content="?" HorizontalAlignment="Right" Margin="0,5,5,0" VerticalAlignment="Top" Width="22" Height="22" TabIndex="8" ToolTip="Help" />
     </Grid>
 </Window>
