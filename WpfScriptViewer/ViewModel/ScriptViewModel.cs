@@ -1,10 +1,9 @@
-﻿using System;
+﻿using GalaSoft.MvvmLight.Command;
+using System;
 
 namespace EmergenceGuardian.WpfScriptViewer {
     public class ScriptViewModel : WorkspaceViewModel {
         private string script;
-        private TimeSpan position;
-        private string errorMessage;
         private bool isEditingHeader = false;
         public bool CanEditHeader { get; protected set; } = false;
 
@@ -17,6 +16,37 @@ namespace EmergenceGuardian.WpfScriptViewer {
                 script = value;
                 RaisePropertyChanged("Script");
             }
+        }
+
+        public bool IsEditingHeader {
+            get => isEditingHeader;
+            set {
+                isEditingHeader = value;
+                RaisePropertyChanged("IsEditingHeader");
+            }
+        }
+
+        private RelayCommand headerEditDoneCommand;
+        public RelayCommand HeaderEditDoneCommand => this.InitCommand(ref headerEditDoneCommand, OnHeaderEditDone, CanHeaderEditDone);
+
+        private bool CanHeaderEditDone() => IsEditingHeader;
+        private void OnHeaderEditDone() => IsEditingHeader = false;
+    }
+
+    public class EditorViewModel : ScriptViewModel {
+        public EditorViewModel() { }
+        public EditorViewModel(string displayName) : base(displayName, false) { }
+    }
+    public class ViewerViewModel : ScriptViewModel {
+        private TimeSpan position;
+        private string errorMessage;
+
+        public ViewerViewModel() {
+            CanEditHeader = true;
+        }
+        public ViewerViewModel(string displayName, string script) : base(displayName, true) {
+            this.Script = script;
+            CanEditHeader = true;
         }
 
         public TimeSpan Position {
@@ -33,28 +63,6 @@ namespace EmergenceGuardian.WpfScriptViewer {
                 errorMessage = value;
                 RaisePropertyChanged("ErrorMessage");
             }
-        }
-
-        public bool IsEditingHeader {
-            get => isEditingHeader;
-            set {
-                isEditingHeader = value;
-                RaisePropertyChanged("IsEditingHeader");
-            }
-        }
-    }
-
-    public class EditorViewModel : ScriptViewModel {
-        public EditorViewModel() { }
-        public EditorViewModel(string displayName) : base(displayName, false) { }
-    }
-    public class ViewerViewModel : ScriptViewModel {
-        public ViewerViewModel() {
-            CanEditHeader = true;
-        }
-        public ViewerViewModel(string displayName, string script) : base(displayName, true) {
-            this.Script = script;
-            CanEditHeader = true;
         }
     }
     public class RunViewModel : ScriptViewModel {

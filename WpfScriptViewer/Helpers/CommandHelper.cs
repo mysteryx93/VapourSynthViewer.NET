@@ -15,9 +15,15 @@ namespace EmergenceGuardian.WpfScriptViewer {
         /// <param name="execute">The method this command will execute.</param>
         /// <param name="canExecute">The method returning whether command can execute.</param>
         /// <returns>The initialized command object.</returns>
-        public static RelayCommand InitCommand(this ObservableObject obj, ref RelayCommand cmd, Action execute, Func<bool> canExecute) {
+        public static RelayCommand InitCommand(this ViewModelBase obj, ref RelayCommand cmd, Action execute, Func<bool> canExecute, bool keepTargetAlive = false) {
             if (cmd == null)
-                cmd = new RelayCommand(execute, canExecute);
+                cmd = new RelayCommand(execute, canExecute, keepTargetAlive);
+            return cmd;
+        }
+
+        public static RelayCommand<T> InitCommand<T>(this ViewModelBase obj, ref RelayCommand<T> cmd, Action<T> execute, Func<T, bool> canExecute, bool keepTargetAlive = false) {
+            if (cmd == null)
+                cmd = new RelayCommand<T>(execute, canExecute, keepTargetAlive);
             return cmd;
         }
     }

@@ -26,8 +26,4 @@ namespace EmergenceGuardian.WpfScriptViewer {
                 return null;
         }
     }
-
-    public sealed class MouseCaptureConverter : BooleanConverter<MouseCaptureState> {
-        public MouseCaptureConverter() : base(MouseCaptureState.Mouse, MouseCaptureState.None) { }
-    }
 }

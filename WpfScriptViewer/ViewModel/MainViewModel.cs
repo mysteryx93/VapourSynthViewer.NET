@@ -7,6 +7,8 @@ using System.Windows.Input;
 using EmergenceGuardian.WpfExtensions;
 using GalaSoft.MvvmLight;
 using GalaSoft.MvvmLight.Command;
+using GalaSoft.MvvmLight.Ioc;
+using MvvmDialogs;
 
 namespace EmergenceGuardian.WpfScriptViewer {
     public class MainViewModel : WorkspaceViewModel {
@@ -19,7 +21,15 @@ namespace EmergenceGuardian.WpfScriptViewer {
             ScriptList.CollectionChanged += delegate { updateAllCommand?.RaiseCanExecuteChanged(); };
         }
 
-        public MessageBoxManager MessageBox { get; } = new MessageBoxManager();
+        [PreferredConstructor]
+        public MainViewModel(IDialogService modalDialogService, IEnvironmentService environmentService):this() {
+            this.dialogService = modalDialogService;
+            this.environmentService = environmentService;
+        }
+
+        private readonly IDialogService dialogService;
+        private readonly IEnvironmentService environmentService;
+        
         public ObservableCollection<ScriptViewModel> ScriptList { get; private set; } = new ObservableCollection<ScriptViewModel>();
         private readonly EditorViewModel editorModel = new EditorViewModel("Script");
         private readonly RunViewModel runModel = new RunViewModel("Run");
@@ -45,47 +55,30 @@ namespace EmergenceGuardian.WpfScriptViewer {
 
         public double ScrollVerticalOffset {
             get => scrollVerticalOffset;
-            set {
-                scrollVerticalOffset = value;
-                RaisePropertyChanged("ScrollVerticalOffset");
-            }
+            set => Set<double>(() => ScrollVerticalOffset, ref scrollVerticalOffset, value);
         }
 
         public double ScrollHorizontalOffset {
             get => scrollHorizontalOffset;
-            set {
-                scrollHorizontalOffset = value;
-                RaisePropertyChanged("ScrollHorizontalOffset");
-            }
+            set => Set<double>(() => ScrollHorizontalOffset, ref scrollHorizontalOffset, value);
         }
 
         public ScriptViewModel SelectedItem {
             get => selectedItem;
             set {
                 // If we had a viewer tab selected, keep its position for other tabs.
-                if (selectedItem is ViewerViewModel) {
-                    if (selectedItem.ErrorMessage == null)
-                        playerPosition = selectedItem.Position;
-                }
-                if (value is ViewerViewModel) {
-                    if (value.ErrorMessage == null)
-                        value.Position = playerPosition;
-                    else
-                        value.Position = TimeSpan.Zero;
-                }
-
-                selectedItem = value;
-                RaisePropertyChanged("SelectedItem");
-                // TabSelectionChanged();
+                if (selectedItem is ViewerViewModel oldViewer && oldViewer.ErrorMessage == null)
+                    playerPosition = oldViewer.Position;
+                if (Set<ScriptViewModel>(() => SelectedItem, ref selectedItem, value) && value is ViewerViewModel newViewer)
+                    newViewer.Position = newViewer.ErrorMessage == null ? playerPosition : TimeSpan.Zero;
             }
         }
 
         public TimeSpan PlayerPosition {
             get => playerPosition;
             set {
-                playerPosition = value;
-                if (SelectedItem is ViewerViewModel)
-                    (SelectedItem as ViewerViewModel).Position = value;
+                if (Set<TimeSpan>(() => PlayerPosition, ref playerPosition, value) && SelectedItem is ViewerViewModel viewer)
+                    viewer.Position = value;
             }
         }
 
@@ -94,18 +87,14 @@ namespace EmergenceGuardian.WpfScriptViewer {
             set {
                 value = Math.Max(value, MinZoom);
                 value = Math.Min(value, MaxZoom);
-                zoom = value;
-                RaisePropertyChanged("Zoom");
+                Set<double>(() => Zoom, ref zoom, value);
             }
         }
 
         public ObservableCollection<string> ZoomList {
             get {
-                if (zoomList == null) {
-                    zoomList = new ObservableCollection<string> {
-                        "20%", "50%", "70%", "100%", "150%", "200%", "400%"
-                    };
-                }
+                if (zoomList == null)
+                    zoomList = new ObservableCollection<string> { "20%", "50%", "70%", "100%", "150%", "200%", "400%" };
                 return zoomList;
             }
         }
@@ -116,18 +105,15 @@ namespace EmergenceGuardian.WpfScriptViewer {
         public bool IsMultiThreaded {
             get => isMultiThreaded;
             set {
-                isMultiThreaded = value;
-                RaisePropertyChanged("IsMultiThreaded");
-                RaisePropertyChanged("Threads");
+                if (Set<bool>(() => IsMultiThreaded, ref isMultiThreaded, value))
+                    RaisePropertyChanged("Threads");
             }
         }
 
         /// <summary>
         /// Returns the amount of threads over which to run each script. 0 means ProcessorCouunt.
         /// </summary>
-        public int Threads {
-            get => IsMultiThreaded ? 0 : 1;
-        }
+        public int Threads => IsMultiThreaded ? 0 : 1;
 
         #endregion
 
@@ -159,9 +145,10 @@ namespace EmergenceGuardian.WpfScriptViewer {
 
         private bool CanUpdateAll() => ScriptList.OfType<ViewerViewModel>().Count() > 1;
         private void OnUpdateAll() {
-            playerPosition = SelectedItem.Position;
-            foreach (ScriptViewModel item in ScriptList) {
-                if (item is ViewerViewModel && item != SelectedItem)
+            if (SelectedItem is ViewerViewModel viewer)
+                playerPosition = viewer.Position;
+            foreach (ViewerViewModel item in ScriptList.OfType<ViewerViewModel>()) {
+                if (item != SelectedItem)
                     item.Position = playerPosition;
             }
         }
@@ -182,26 +169,31 @@ namespace EmergenceGuardian.WpfScriptViewer {
             Zoom /= ZoomIncrement;
         }
 
+        private RelayCommand helpCommand;
+        public RelayCommand HelpCommand => this.InitCommand(ref helpCommand, OnHelp, CanHelp);
+
+        private bool CanHelp() => true;
+        private void OnHelp() {
+            dialogService.ShowDialog(this, ViewModelLocator.Instance.Help);
+        }
+
         #endregion
 
 
-        public void Header_PreviewLeftMouseButtonDown(ScriptViewModel sender, MouseButtonEventArgs e) {
-            if (sender == SelectedItem && sender.CanEditHeader) {
-                if (!sender.IsEditingHeader) {
-                    sender.IsEditingHeader = true;
-                    e.Handled = true;
-                }
-            }
+        public void Window_Loaded() {
+            // Load script file from command-line.
+            if (environmentService.CommandLineArguments.Count() > 1)
+                ReadScriptFile(environmentService.CommandLineArguments.ElementAt(1));
         }
 
-        public void Header_PreviewKeyDown(ScriptViewModel sender, KeyEventArgs e) {
-            if (e.Key == Key.Escape || e.Key == Key.Enter || e.Key == Key.Tab) {
-                (sender as ScriptViewModel).IsEditingHeader = false;
+        public void Header_PreviewLeftMouseButtonDown(ScriptViewModel sender, MouseButtonEventArgs e) {
+            if (sender == SelectedItem && sender.CanEditHeader && !sender.IsEditingHeader) {
+                sender.IsEditingHeader = true;
                 e.Handled = true;
             }
         }
 
-        public void Tabs_SelectionChanged(SelectionChangedEventArgs e) {
+        public void Tabs_SelectionChanged() {
             if (SelectedItem == runModel) {
                 if (CanRun())
                     OnRun();
@@ -211,9 +203,8 @@ namespace EmergenceGuardian.WpfScriptViewer {
         }
 
         public void Viewer_MediaLoaded() {
-            if (selectedItem is ViewerViewModel) {
-                SelectedItem.Position = playerPosition;
-            }
+            if (selectedItem is ViewerViewModel viewer)
+                viewer.Position = playerPosition;
         }
 
         private void Viewer_RequestClose(object sender, EventArgs e) {
@@ -225,12 +216,15 @@ namespace EmergenceGuardian.WpfScriptViewer {
             ScriptList.RemoveAt(Pos);
         }
 
-        public void ReadScriptFile(string file) {
+        public bool ReadScriptFile(string file) {
             try {
                 editorModel.Script = File.ReadAllText(file);
+                return true;
             } catch (Exception ex) {
-                MessageBox.Show(null, ex.Message, "Error loading file");
-                CloseCommand.Execute(null);
+                dialogService.ShowMessageBox(this, ex.Message, "Error loading file");
+                if (CloseCommand.CanExecute(null))
+                    CloseCommand.Execute(null);
+                return false;
             }
         }
     }
