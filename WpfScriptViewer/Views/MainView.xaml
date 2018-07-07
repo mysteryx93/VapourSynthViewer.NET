@@ -30,6 +30,16 @@
             <KeyBinding Key="F4" Modifiers="Ctrl" Command="{Binding SelectedItem.CloseCommand, Mode=OneWay}" />
             <KeyBinding Key="Add" Command="{Binding ZoomInCommand, Mode=OneWay}" />
             <KeyBinding Key="Subtract" Command="{Binding ZoomOutCommand, Mode=OneWay}" />
+            <KeyBinding Key="D1" Modifiers="Ctrl" Command="{Binding SwitchTabCommand}" CommandParameter="{wpf:Int32 0}" />
+            <KeyBinding Key="D2" Modifiers="Ctrl" Command="{Binding SwitchTabCommand}" CommandParameter="{wpf:Int32 1}" />
+            <KeyBinding Key="D3" Modifiers="Ctrl" Command="{Binding SwitchTabCommand}" CommandParameter="{wpf:Int32 2}" />
+            <KeyBinding Key="D4" Modifiers="Ctrl" Command="{Binding SwitchTabCommand}" CommandParameter="{wpf:Int32 3}" />
+            <KeyBinding Key="D5" Modifiers="Ctrl" Command="{Binding SwitchTabCommand}" CommandParameter="{wpf:Int32 4}" />
+            <KeyBinding Key="D6" Modifiers="Ctrl" Command="{Binding SwitchTabCommand}" CommandParameter="{wpf:Int32 5}" />
+            <KeyBinding Key="D7" Modifiers="Ctrl" Command="{Binding SwitchTabCommand}" CommandParameter="{wpf:Int32 6}" />
+            <KeyBinding Key="D8" Modifiers="Ctrl" Command="{Binding SwitchTabCommand}" CommandParameter="{wpf:Int32 7}" />
+            <KeyBinding Key="D9" Modifiers="Ctrl" Command="{Binding SwitchTabCommand}" CommandParameter="{wpf:Int32 8}" />
+            <KeyBinding Key="D0" Modifiers="Ctrl" Command="{Binding SwitchTabCommand}" CommandParameter="{wpf:Int32 9}" />
         </Grid.InputBindings>
         <TabControl x:Name="Tabs" Margin="0" Style="{StaticResource BorderlessTab}"
                 SelectionChanged="{wpf:MethodBinding Tabs_SelectionChanged}" wpf:TabControlBehavior.IsCached="True"

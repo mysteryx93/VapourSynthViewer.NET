@@ -158,6 +158,15 @@ namespace EmergenceGuardian.WpfScriptViewer {
             }
         }
 
+        private RelayCommand<int> switchTabCommand;
+        public RelayCommand<int> SwitchTabCommand => this.InitCommand<int>(ref switchTabCommand, OnSwitchTab, CanSwitchTab);
+
+        private bool CanSwitchTab(int index) => index < ScriptList.Count;
+        private void OnSwitchTab(int index) {
+            if (index < ScriptList.Count)
+                SelectedItem = ScriptList[index];
+        }
+
         private RelayCommand zoomInCommand;
         public RelayCommand ZoomInCommand => this.InitCommand(ref zoomInCommand, OnZoomIn, CanZoomIn);
 
