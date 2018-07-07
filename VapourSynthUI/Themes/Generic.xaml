@@ -4,7 +4,8 @@
         xmlns:ui="clr-namespace:EmergenceGuardian.MediaPlayerUI;assembly=MediaPlayerUI"
         xmlns:wpf="clr-namespace:EmergenceGuardian.WpfExtensions;assembly=WpfExtensions">
 
-    <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
+    <wpf:BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
+    <wpf:BooleanToVisibilityConverter x:Key="BooleanToVisibilityInverseConverter" True="Collapsed" False="Visible" />
 
     <Style TargetType="{x:Type local:VsMediaPlayerHost}">
         <Setter Property="Template">
@@ -14,14 +15,18 @@
                             BorderThickness="{TemplateBinding BorderThickness}">
                         <Grid>
                             <Grid x:Name="PART_Host">
+                                <Image Stretch="Uniform" SnapsToDevicePixels="True" RenderOptions.BitmapScalingMode="HighQuality"
+                                        Source="{Binding VideoSource, RelativeSource={RelativeSource TemplatedParent}, Mode=OneWay}"
+                                        Visibility="{Binding ZoomScaleToFit, Converter={StaticResource BooleanToVisibilityConverter}, RelativeSource={RelativeSource TemplatedParent}}"/>
                                 <wpf:ZoomViewer
                                         ScrollVerticalOffset="{Binding ScrollVerticalOffset, RelativeSource={RelativeSource TemplatedParent}, Mode=TwoWay}"
                                         ScrollHorizontalOffset="{Binding ScrollHorizontalOffset, RelativeSource={RelativeSource TemplatedParent}, Mode=TwoWay}"
                                         Zoom="{Binding Zoom, RelativeSource={RelativeSource TemplatedParent}, Mode=TwoWay}"
                                         MinZoom="{Binding MinZoom, RelativeSource={RelativeSource TemplatedParent}, Mode=TwoWay}"
                                         MaxZoom="{Binding MaxZoom, RelativeSource={RelativeSource TemplatedParent}, Mode=TwoWay}"
-                                        ZoomIncrement="{Binding ZoomIncrement, RelativeSource={RelativeSource TemplatedParent}, Mode=TwoWay}">
-                                    <Image x:Name="PART_Img" Stretch="None" SnapsToDevicePixels="True"
+                                        ZoomIncrement="{Binding ZoomIncrement, RelativeSource={RelativeSource TemplatedParent}, Mode=TwoWay}"
+                                        Visibility="{Binding ZoomScaleToFit, Converter={StaticResource BooleanToVisibilityInverseConverter}, RelativeSource={RelativeSource TemplatedParent}}">
+                                    <Image Stretch="None" SnapsToDevicePixels="True"
                                             Source="{Binding VideoSource, RelativeSource={RelativeSource TemplatedParent}, Mode=OneWay}" />
                                 </wpf:ZoomViewer>
                                 <Viewbox wpf:ViewboxExtensions.MaxZoomFactor="2.0" Focusable="False"

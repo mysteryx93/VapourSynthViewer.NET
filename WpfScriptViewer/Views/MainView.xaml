@@ -10,13 +10,14 @@
         x:Class="EmergenceGuardian.WpfScriptViewer.MainView" mc:Ignorable="d" Title="VapourSynth Multi-Viewer"
         Height="450" Width="800" WindowState="Maximized" DataContext="{Binding Main, Source={StaticResource Locator}}"
         x:Name="UI" Loaded="{wpf:MethodBinding Window_Loaded}" Style="{StaticResource WindowDefaultStyle}"
-        AllowDrop="True" Drop="{wpf:MethodBinding Window_DropFile, {wpf:EventArgs}}" PreviewDragOver="{wpf:MethodBinding Window_PreviewDragOver, {wpf:EventArgs}}">
+        AllowDrop="True" Drop="{wpf:MethodBinding Window_DropFile, {wpf:EventArgs}}"
+        PreviewDragOver="{wpf:MethodBinding Window_PreviewDragOver, {wpf:EventArgs}}">
     <Window.Resources>
         <ResourceDictionary>
             <wpf:BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
             <wpf:BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverterReverse" True="Collapsed"
                     False="Visible" />
-            <local:ZoomConverter x:Key="ZoomConverter" />
+            <local:ZoomConverter x:Key="ZoomConverter" ZeroText="Scale to Fit" />
             <ResourceDictionary.MergedDictionaries>
                 <ResourceDictionary Source="../Skins/MainSkin.xaml" />
             </ResourceDictionary.MergedDictionaries>
@@ -71,12 +72,14 @@
             <TabControl.Resources>
                 <DataTemplate DataType="{x:Type local:EditorViewModel}">
                     <TextBox x:Name="ScriptText" AcceptsReturn="True" VerticalScrollBarVisibility="Visible"
-                            HorizontalScrollBarVisibility="Auto" BorderThickness="1" wpf:FocusExtensions.FocusOnLoaded="True"
+                            HorizontalScrollBarVisibility="Auto" BorderThickness="1"
+                            wpf:FocusExtensions.FocusOnLoaded="True"
                             Text="{Binding Script, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" TabIndex="2" />
                 </DataTemplate>
                 <DataTemplate DataType="{x:Type local:ViewerViewModel}">
-                    <ui:MediaPlayerWpf x:Name="Player" IsVolumeVisible="False" IsSpeedVisible="False" ChangeVolumeOnMouseWheel="False"
-                            IsStopVisible="False" IsLoopVisible="False" PositionDisplay="Seconds" TabIndex="2">
+                    <ui:MediaPlayerWpf x:Name="Player" IsVolumeVisible="False" IsSpeedVisible="False"
+                            ChangeVolumeOnMouseWheel="False" IsStopVisible="False" IsLoopVisible="False"
+                            PositionDisplay="Seconds" TabIndex="2">
                         <ui:MediaPlayerWpf.InputBindings>
                             <KeyBinding Key="Space" Command="{Binding UI.PlayPauseCommand, ElementName=Player}" />
                             <KeyBinding Key="Right" Command="{Binding UI.SeekCommand, ElementName=Player}"
@@ -100,6 +103,7 @@
                                 MinZoom="{Binding ViewModel.MinZoom, ElementName=UI, Mode=OneTime}"
                                 MaxZoom="{Binding ViewModel.MaxZoom, ElementName=UI, Mode=OneTime}"
                                 ZoomIncrement="{Binding ViewModel.ZoomIncrement, ElementName=UI, Mode=OneTime}"
+                                ZoomScaleToFit="{Binding ViewModel.ZoomScaleToFit, ElementName=UI, Mode=TwoWay}"
                                 Threads="{Binding ViewModel.Threads, ElementName=UI}"
                                 OnMediaLoaded="{wpf:MethodBinding {Binding ViewModel, ElementName=UI}, Viewer_MediaLoaded}">
                             <wpf:PushBindingManager.PushBindings>
@@ -110,12 +114,12 @@
                 </DataTemplate>
             </TabControl.Resources>
         </TabControl>
-        <CheckBox Height="18" Width="44" Margin="0,9,181,0" HorizontalAlignment="Right" VerticalAlignment="Top"
+        <CheckBox Height="18" Width="44" Margin="0,9,191,0" HorizontalAlignment="Right" VerticalAlignment="Top"
                 Content="MT" ToolTip="Multi-Threaded" TabIndex="5" IsChecked="{Binding IsMultiThreaded}" />
-        <Button Height="22" Width="75" Margin="0,5,105,0" Content="Update All" HorizontalAlignment="Right"
+        <Button Height="22" Width="75" Margin="0,5,115,0" Content="Update All" HorizontalAlignment="Right"
                 VerticalAlignment="Top" ToolTip="Load frame in all tabs" TabIndex="6"
                 Command="{Binding UpdateAllCommand, Mode=OneWay}" />
-        <ComboBox Height="20" Width="64" Margin="0,7,33,0" HorizontalAlignment="Right" FontSize="10"
+        <ComboBox Height="20" Width="77" Margin="0,7,33,0" HorizontalAlignment="Right" FontSize="10"
                 Text="{Binding Zoom, Converter={StaticResource ZoomConverter}, Mode=TwoWay}" VerticalAlignment="Top"
                 ItemsSource="{Binding ZoomList}" IsEditable="True" ToolTip="Zoom" TabIndex="7" />
         <Button Content="?" HorizontalAlignment="Right" Margin="0,5,5,0" VerticalAlignment="Top" Width="22" Height="22"

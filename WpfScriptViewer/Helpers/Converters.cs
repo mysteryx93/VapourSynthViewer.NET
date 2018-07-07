@@ -9,14 +9,22 @@ namespace EmergenceGuardian.WpfScriptViewer {
     /// </summary>
     [ValueConversion(typeof(double), typeof(string))]
     public class ZoomConverter : IValueConverter {
+        public string ZeroText { get; set; } = "Scale to Fit";
+
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture) {
             double Value = (double)value;
             int Decimals = parameter != null ? (int)parameter : 0;
-            return Value.ToString("p" + Decimals.ToString());
+            if (Value != 0)
+                return Value.ToString("p" + Decimals.ToString());
+            else
+                return ZeroText;
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) {
             string Value = ((string)value).Trim();
+            if (string.Compare(Value, ZeroText, true) == 0)
+                return 0.0;
+
             if (Value.EndsWith("%"))
                 Value = Value.Substring(0, Value.Length - 1);
 

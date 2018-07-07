@@ -10,7 +10,6 @@ using EmergenceGuardian.VapourSynthViewer;
 
 namespace EmergenceGuardian.VapourSynthUI {
     [TemplatePart(Name = VsMediaPlayerHost.PART_Host, Type = typeof(Grid))]
-    [TemplatePart(Name = VsMediaPlayerHost.PART_Img, Type = typeof(Image))]
     public class VsMediaPlayerHost : PlayerBase {
 
         #region Declarations / Constructor
@@ -21,8 +20,6 @@ namespace EmergenceGuardian.VapourSynthUI {
 
         public const string PART_Host = "PART_Host";
         public Grid PartHost => GetTemplateChild(PART_Host) as Grid;
-        public const string PART_Img = "PART_Img";
-        public Image PartImg => GetTemplateChild(PART_Img) as Image;
 
         private int posRequested;
         private VsScript scriptApi;
@@ -140,7 +137,7 @@ namespace EmergenceGuardian.VapourSynthUI {
             VsMediaPlayerHost P = d as VsMediaPlayerHost;
             if (DesignerProperties.GetIsInDesignMode(P))
                 return;
-            await Task.Yield();
+            await Task.Yield(); // Ensure other properties are set before loading script.
             lock (P.outputLock) {
                 if (e.NewValue == null)
                     P.Stop();
@@ -176,8 +173,12 @@ namespace EmergenceGuardian.VapourSynthUI {
         // Zoom
         public static readonly DependencyProperty ZoomProperty = DependencyProperty.Register("Zoom", typeof(double), typeof(VsMediaPlayerHost),
             new FrameworkPropertyMetadata(1.0, FrameworkPropertyMetadataOptions.AffectsRender | FrameworkPropertyMetadataOptions.AffectsMeasure));
-        private static bool ValidateZoom(object value) => (double)value > 0;
         public double Zoom { get => (double)GetValue(ZoomProperty); set => SetValue(ZoomProperty, value); }
+
+        // ZoomScaleToFit
+        public static readonly DependencyProperty ZoomScaleToFitProperty = DependencyProperty.Register("ZoomScaleToFit", typeof(bool), typeof(VsMediaPlayerHost),
+            new FrameworkPropertyMetadata(false, FrameworkPropertyMetadataOptions.AffectsRender | FrameworkPropertyMetadataOptions.AffectsMeasure));
+        public bool ZoomScaleToFit { get => (bool)GetValue(ZoomScaleToFitProperty); set => SetValue(ZoomScaleToFitProperty, value); }
 
         #endregion
 
@@ -241,7 +242,7 @@ namespace EmergenceGuardian.VapourSynthUI {
             }
             base.PositionChanged(value, isSeeking);
         }
-        
+
         /// <summary>
         /// Pauses or resumes playback.
         /// </summary>

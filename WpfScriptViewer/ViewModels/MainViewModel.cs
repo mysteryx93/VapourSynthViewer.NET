@@ -25,14 +25,14 @@ namespace EmergenceGuardian.WpfScriptViewer {
         }
 
         [PreferredConstructor]
-        public MainViewModel(IDialogService modalDialogService, IEnvironmentService environmentService):this() {
+        public MainViewModel(IDialogService modalDialogService, IEnvironmentService environmentService) : this() {
             this.dialogService = modalDialogService;
             this.environmentService = environmentService;
         }
 
         private readonly IDialogService dialogService;
         private readonly IEnvironmentService environmentService;
-        
+
         public ObservableCollection<IScriptViewModel> ScriptList { get; private set; } = new ObservableCollection<IScriptViewModel>();
         private readonly IEditorViewModel editorModel;
         private readonly IRunViewModel runModel;
@@ -88,19 +88,23 @@ namespace EmergenceGuardian.WpfScriptViewer {
         public double Zoom {
             get => zoom;
             set {
-                value = Math.Max(value, MinZoom);
-                value = Math.Min(value, MaxZoom);
+                ZoomScaleToFit = value == 0.0;
+                if (value != 0.0) {
+                    value = Math.Max(value, MinZoom);
+                    value = Math.Min(value, MaxZoom);
+                }
                 Set<double>(() => Zoom, ref zoom, value);
             }
         }
 
-        public ObservableCollection<string> ZoomList {
-            get {
-                if (zoomList == null)
-                    zoomList = new ObservableCollection<string> { "20%", "50%", "70%", "100%", "150%", "200%", "400%" };
-                return zoomList;
-            }
+        private bool zoomScaleToFit;
+        public bool ZoomScaleToFit {
+            get => zoomScaleToFit;
+            set => Set<bool>(() => ZoomScaleToFit, ref zoomScaleToFit, value);
         }
+
+        public ObservableCollection<string> ZoomList => zoomList ??
+            (zoomList = new ObservableCollection<string> { "Scale to Fit", "20%", "50%", "70%", "100%", "150%", "200%", "400%" });
 
         /// <summary>
         /// Gets or sets whether to enable multi-threaded mode.
