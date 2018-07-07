@@ -22,8 +22,7 @@ namespace EmergenceGuardian.VapourSynthViewer {
         private DateTime displayTime = DateTime.MinValue;
         private double maxFps = 0;
         private TimeSpan maxFpsSpan;
-        public delegate void ClearQueueCallback();
-        private ClearQueueCallback clearQueueCallback;
+        private Action clearQueueCallback;
 
         /// <summary>
         /// Occurs when a frame is done processing.
@@ -116,7 +115,7 @@ namespace EmergenceGuardian.VapourSynthViewer {
 
             List<VsFrameStatus> callbackList = new List<VsFrameStatus>();
             VsFrameStatus Found = null;
-            ClearQueueCallback Callback = null;
+            Action Callback = null;
             lock (queue) {
                 for (int i = 0; i < queue.Count; i++) {
                     if (queue[i].Index == n && queue[i].Frame == null) {
@@ -201,7 +200,7 @@ namespace EmergenceGuardian.VapourSynthViewer {
         /// </summary>
         /// <param name="callback">Calls this method after all cancelled frames are done processing.</param>
         /// <returns>The amount of frames cleared from the queue.</returns>
-        public int ClearQueue(ClearQueueCallback callback) {
+        public int ClearQueue(Action callback) {
             int Cleared = 0;
             lock (queue) {
                 // isClearingQueue exits the display loop and will be reset in GetFrameAsync_Callback

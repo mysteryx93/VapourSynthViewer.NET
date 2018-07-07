@@ -2,7 +2,14 @@
 using System;
 
 namespace EmergenceGuardian.WpfScriptViewer {
-    public class ScriptViewModel : WorkspaceViewModel {
+    public interface IScriptViewModel : IWorkspaceViewModel {
+        bool CanEditHeader { get; }
+        string Script { get; set; }
+        bool IsEditingHeader { get; set; }
+        RelayCommand HeaderEditDoneCommand { get; }
+    }
+
+    public class ScriptViewModel : WorkspaceViewModel, IScriptViewModel {
         private string script;
         private bool isEditingHeader = false;
         public bool CanEditHeader { get; protected set; } = false;
@@ -33,19 +40,24 @@ namespace EmergenceGuardian.WpfScriptViewer {
         private void OnHeaderEditDone() => IsEditingHeader = false;
     }
 
-    public class EditorViewModel : ScriptViewModel {
-        public EditorViewModel() { }
-        public EditorViewModel(string displayName) : base(displayName, false) { }
+    public interface IEditorViewModel : IScriptViewModel { }
+    public class EditorViewModel : ScriptViewModel, IEditorViewModel {
+        public EditorViewModel() {
+            CanClose = false;
+            DisplayName = "Script";
+        }
     }
-    public class ViewerViewModel : ScriptViewModel {
+
+    public interface IViewerViewModel : IScriptViewModel {
+        TimeSpan Position { get; set; }
+        string ErrorMessage { get; set; }
+    }
+    public class ViewerViewModel : ScriptViewModel, IViewerViewModel {
         private TimeSpan position;
         private string errorMessage;
 
         public ViewerViewModel() {
-            CanEditHeader = true;
-        }
-        public ViewerViewModel(string displayName, string script) : base(displayName, true) {
-            this.Script = script;
+            CanClose = true;
             CanEditHeader = true;
         }
 
@@ -65,8 +77,12 @@ namespace EmergenceGuardian.WpfScriptViewer {
             }
         }
     }
-    public class RunViewModel : ScriptViewModel {
-        public RunViewModel() { }
-        public RunViewModel(string displayName) : base(displayName, false) { }
+
+    public interface IRunViewModel : IScriptViewModel { }
+    public class RunViewModel : ScriptViewModel, IRunViewModel {
+        public RunViewModel() {
+            CanClose = false;
+            DisplayName = "Run";
+        }
     }
 }

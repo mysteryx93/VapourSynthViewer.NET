@@ -16,7 +16,9 @@ namespace EmergenceGuardian.WpfScriptViewer {
         #region Declarations / Constructor
 
         public MainViewModel() {
+            editorModel = ViewModelLocator.Instance.GetEditorViewModel();
             ScriptList.Add(editorModel);
+            runModel = ViewModelLocator.Instance.GetRunViewModel();
             ScriptList.Add(runModel);
             ScriptList.CollectionChanged += delegate { updateAllCommand?.RaiseCanExecuteChanged(); };
         }
@@ -30,13 +32,13 @@ namespace EmergenceGuardian.WpfScriptViewer {
         private readonly IDialogService dialogService;
         private readonly IEnvironmentService environmentService;
         
-        public ObservableCollection<ScriptViewModel> ScriptList { get; private set; } = new ObservableCollection<ScriptViewModel>();
-        private readonly EditorViewModel editorModel = new EditorViewModel("Script");
-        private readonly RunViewModel runModel = new RunViewModel("Run");
+        public ObservableCollection<IScriptViewModel> ScriptList { get; private set; } = new ObservableCollection<IScriptViewModel>();
+        private readonly IEditorViewModel editorModel;
+        private readonly IRunViewModel runModel;
 
         private double scrollVerticalOffset;
         private double scrollHorizontalOffset;
-        private ScriptViewModel selectedItem;
+        private IScriptViewModel selectedItem;
         private TimeSpan playerPosition;
         private double zoom = 1;
         private ObservableCollection<string> zoomList;
@@ -63,13 +65,13 @@ namespace EmergenceGuardian.WpfScriptViewer {
             set => Set<double>(() => ScrollHorizontalOffset, ref scrollHorizontalOffset, value);
         }
 
-        public ScriptViewModel SelectedItem {
+        public IScriptViewModel SelectedItem {
             get => selectedItem;
             set {
                 // If we had a viewer tab selected, keep its position for other tabs.
                 if (selectedItem is ViewerViewModel oldViewer && oldViewer.ErrorMessage == null)
                     playerPosition = oldViewer.Position;
-                if (Set<ScriptViewModel>(() => SelectedItem, ref selectedItem, value) && value is ViewerViewModel newViewer)
+                if (Set<IScriptViewModel>(() => SelectedItem, ref selectedItem, value) && value is IViewerViewModel newViewer)
                     newViewer.Position = newViewer.ErrorMessage == null ? playerPosition : TimeSpan.Zero;
             }
         }
@@ -77,7 +79,7 @@ namespace EmergenceGuardian.WpfScriptViewer {
         public TimeSpan PlayerPosition {
             get => playerPosition;
             set {
-                if (Set<TimeSpan>(() => PlayerPosition, ref playerPosition, value) && SelectedItem is ViewerViewModel viewer)
+                if (Set<TimeSpan>(() => PlayerPosition, ref playerPosition, value) && SelectedItem is IViewerViewModel viewer)
                     viewer.Position = value;
             }
         }
@@ -134,7 +136,9 @@ namespace EmergenceGuardian.WpfScriptViewer {
                 }
             }
             // Otherwise, create new viewer. Insert before Run tab.
-            ScriptViewModel Viewer = new ViewerViewModel("Viewer " + ++autoIndex, Script);
+            IScriptViewModel Viewer = ViewModelLocator.Instance.GetViewerViewModel();
+            Viewer.DisplayName = "Viewer " + ++autoIndex;
+            Viewer.Script = Script;
             Viewer.RequestClose += Viewer_RequestClose;
             ScriptList.Insert(ScriptList.Count - 1, Viewer);
             SelectedItem = Viewer;

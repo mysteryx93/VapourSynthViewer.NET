@@ -7,10 +7,10 @@
         xmlns:local="clr-namespace:EmergenceGuardian.WpfScriptViewer"
         xmlns:wpf="clr-namespace:EmergenceGuardian.WpfExtensions;assembly=WpfExtensions"
         xmlns:i="http://schemas.microsoft.com/expression/2010/interactivity"
-        xmlns:md="https://github.com/fantasticfiasco/mvvm-dialogs" x:Class="EmergenceGuardian.WpfScriptViewer.MainView"
-        mc:Ignorable="d" Title="VapourSynth Multi-Viewer" Height="450" Width="800" UseLayoutRounding="True"
+        x:Class="EmergenceGuardian.WpfScriptViewer.MainView"
+        mc:Ignorable="d" Title="VapourSynth Multi-Viewer" Height="450" Width="800" 
         WindowState="Maximized" DataContext="{Binding Main, Source={StaticResource Locator}}" x:Name="UI"
-        md:DialogServiceViews.IsRegistered="True" Loaded="{wpf:MethodBinding Window_Loaded}">
+        Loaded="{wpf:MethodBinding Window_Loaded}" Style="{StaticResource WindowDefaultStyle}">
     <Window.Resources>
         <ResourceDictionary>
             <wpf:BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
@@ -45,7 +45,7 @@
                                 PreviewMouseLeftButtonDown="{wpf:MethodBinding {Binding ViewModel, ElementName=UI}, Header_PreviewLeftMouseButtonDown, {Binding}, {wpf:EventArgs}}">
                             <TextBox Text="{Binding DisplayName, UpdateSourceTrigger=LostFocus}" Height="26"
                                     Margin="2,0,-6,0" wpf:SelectTextOnFocus.Active="true"
-                                    wpf:FocusExtension.IsFocused="{Binding IsEditingHeader, Mode=TwoWay, IsAsync=True}"
+                                    wpf:FocusExtensions.IsFocused="{Binding IsEditingHeader, Mode=TwoWay, IsAsync=True}"
                                     wpf:MouseCaptureExtension.HasCapture="{Binding IsEditingHeader, Mode=TwoWay}"
                                     Visibility="{Binding IsEditingHeader, Converter={StaticResource BooleanToVisibilityConverter}, Mode=OneWay}">
                                     <TextBox.InputBindings>

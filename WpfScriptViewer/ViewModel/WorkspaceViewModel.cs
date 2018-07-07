@@ -3,7 +3,15 @@ using GalaSoft.MvvmLight;
 using GalaSoft.MvvmLight.Command;
 
 namespace EmergenceGuardian.WpfScriptViewer {
-    public class WorkspaceViewModel : ViewModelBase {
+    public interface IWorkspaceViewModel {
+        event EventHandler RequestClose;
+        RelayCommand CloseCommand { get; }
+        string DisplayName { get; set; }
+        bool CanClose { get; set; }
+        void OnRequestClose();
+    }
+
+    public class WorkspaceViewModel : ViewModelBase, IWorkspaceViewModel {
         public WorkspaceViewModel() { }
 
         public WorkspaceViewModel(string displayName, bool canClose) {

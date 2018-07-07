@@ -35,25 +35,31 @@ namespace EmergenceGuardian.WpfScriptViewer {
         /// </summary>
         public ViewModelLocator() {
             ServiceLocator.SetLocatorProvider(() => SimpleIoc.Default);
+            SimpleIoc.Default.Reset();
+            bool IsDesignMode = DesignerProperties.GetIsInDesignMode(new DependencyObject());
 
             // Register services.
-            //if (!ViewModelBase.IsInDesignModeStatic) {
-                SimpleIoc.Default.Register<IDialogService>(() => new DialogService(null, new DialogTypeLocator(), null));
-                SimpleIoc.Default.Register<IEnvironmentService, EnvironmentService>();
-            //}
+            SimpleIoc.Default.Register<IDialogService>(() => new DialogService(null, new DialogTypeLocator(), null));
+            SimpleIoc.Default.Register<IEnvironmentService, EnvironmentService>();
 
             // Register ViewModels.
             SimpleIoc.Default.Register<MainViewModel>();
-            if (ViewModelBase.IsInDesignModeStatic)
+            if (IsDesignMode)
                 SimpleIoc.Default.Register<IHelpViewModel, DesignHelpViewModel>();
             else
                 SimpleIoc.Default.Register<IHelpViewModel, HelpViewModel>();
+            SimpleIoc.Default.Register<IEditorViewModel, EditorViewModel>();
+            SimpleIoc.Default.Register<IViewerViewModel, ViewerViewModel>();
+            SimpleIoc.Default.Register<IRunViewModel, RunViewModel>();
         }
 
         public IDialogService DialogService => ServiceLocator.Current.GetInstance<IDialogService>();
         public IEnvironmentService EnvironmentService => ServiceLocator.Current.GetInstance<IEnvironmentService>();
         public MainViewModel Main => ServiceLocator.Current.GetInstance<MainViewModel>();
         public IHelpViewModel Help => ServiceLocator.Current.GetInstance<IHelpViewModel>();
+        public IEditorViewModel GetEditorViewModel() => SimpleIoc.Default.GetInstanceWithoutCaching<IEditorViewModel>();
+        public IViewerViewModel GetViewerViewModel() => SimpleIoc.Default.GetInstanceWithoutCaching<IViewerViewModel>();
+        public IRunViewModel GetRunViewModel() => SimpleIoc.Default.GetInstanceWithoutCaching<IRunViewModel>();
 
         public static void Cleanup() => SimpleIoc.Default.Reset();
 

@@ -2,9 +2,18 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:local="clr-namespace:EmergenceGuardian.WpfScriptViewer"
-        xmlns:d="http://schemas.microsoft.com/expression/blend/2008" d1p1:Ignorable="d"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+        xmlns:wpf="clr-namespace:EmergenceGuardian.WpfExtensions;assembly=WpfExtensions"
+        xmlns:md="clr-namespace:MvvmDialogs;assembly=MvvmDialogs"
+        d1p1:Ignorable="d"
         xmlns:d1p1="http://schemas.openxmlformats.org/markup-compatibility/2006" StartupUri="View/MainView.xaml">
     <Application.Resources>
         <local:ViewModelLocator x:Key="Locator" d:IsDataSource="True" />
+
+        <Style x:Key="WindowDefaultStyle" TargetType="Window" BasedOn="{StaticResource {x:Type Window}}">
+            <Setter Property="wpf:FocusExtensions.FocusFirst" Value="True" />
+            <Setter Property="md:DialogServiceViews.IsRegistered" Value="True" />
+            <Setter Property="UseLayoutRounding" Value="True" />
+        </Style>
     </Application.Resources>
 </Application>

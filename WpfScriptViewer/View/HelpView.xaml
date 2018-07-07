@@ -3,11 +3,10 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:md="https://github.com/fantasticfiasco/mvvm-dialogs"
-        xmlns:local="clr-namespace:EmergenceGuardian.WpfScriptViewer" md:DialogServiceViews.IsRegistered="True"
+        xmlns:local="clr-namespace:EmergenceGuardian.WpfScriptViewer" 
         mc:Ignorable="d" Title="About VapourSynth Multi-Viewer" Height="417.744" Width="424.876" ResizeMode="NoResize"
         ShowInTaskbar="False" DataContext="{Binding Help, Mode=OneWay, Source={StaticResource Locator}}"
-        UseLayoutRounding="True" WindowStyle="None" WindowStartupLocation="CenterOwner">
+        WindowStyle="None" WindowStartupLocation="CenterOwner" Style="{StaticResource WindowDefaultStyle}">
     <Border BorderBrush="{DynamicResource {x:Static SystemColors.ActiveBorderBrushKey}}" BorderThickness="2">
         <Grid>
             <TextBlock Margin="10,10,10,0" VerticalAlignment="Top" FontSize="20"><Run Text="VapourSynth Multi-Viewer v" /><Run
@@ -25,7 +24,7 @@
                         Text="-: Zoom out" /><LineBreak /><Run Text="Ctrl+Enter: Toggle full-screen" /><LineBreak /><Run
                         Text="Ctrl+F4: Close current tab" /></TextBlock>
             <Button Content="Close" Margin="0,0,10,10" HorizontalAlignment="Right" Width="100" Height="24"
-                    VerticalAlignment="Bottom" IsCancel="True" />
+                    VerticalAlignment="Bottom" IsCancel="True" IsDefault="True" />
 
         </Grid>
     </Border>

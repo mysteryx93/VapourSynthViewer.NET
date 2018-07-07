@@ -33,7 +33,6 @@ namespace EmergenceGuardian.VapourSynthUI {
         WriteableBitmap Bmp;
         private string autoLoadFile;
         private string autoLoadScript;
-        bool isShutdownAttached = false;
 
         #endregion
 
@@ -194,14 +193,14 @@ namespace EmergenceGuardian.VapourSynthUI {
             base.OnApplyTemplate();
 
             // Note: this event could happen more than once if switching theme.
-            if (!DesignerProperties.GetIsInDesignMode(this) && !isShutdownAttached) {
-                Unloaded += (s2, e2) => {
+            if (!DesignerProperties.GetIsInDesignMode(this)) {
+                Loaded += delegate {
+                    Dispatcher.ShutdownStarted += Dispatcher_ShutdownStarted;
+                };
+                Unloaded += delegate {
                     Dispatcher.ShutdownStarted -= Dispatcher_ShutdownStarted;
                     //Stop(); Object can be unloaded for many reasons, we can't stop here.
-                    isShutdownAttached = false;
                 };
-                Dispatcher.ShutdownStarted += Dispatcher_ShutdownStarted;
-                isShutdownAttached = true;
             }
         }
 
@@ -228,7 +227,7 @@ namespace EmergenceGuardian.VapourSynthUI {
                     if (output != null && IsMediaLoaded) {
                         int NewPos = (int)value.TotalSeconds;
                         if (posRequested != NewPos) {
-                            posRequested = NewPos;
+                            posRequested = NewPos - 1; // It will increment in AddToQueue
                             output.ClearQueue();
                             if (IsPlaying)
                                 FillQueue();
@@ -264,6 +263,7 @@ namespace EmergenceGuardian.VapourSynthUI {
         /// <summary>
         /// Stops playback and unloads file.
         /// </summary>
+        /// <param name="callback"Call this method when stopping operation is done.</param>
         public override void Stop() {
             base.Stop();
             if (output != null) {
@@ -272,8 +272,8 @@ namespace EmergenceGuardian.VapourSynthUI {
                         output.ClearQueue(async () => {
                             await Dispatcher.BeginInvoke(new Action(() => {
                                 VideoSource = null;
-                                IsErrorVisible = false;
-                                ErrorMessage = null;
+                                //IsErrorVisible = false;
+                                //ErrorMessage = null;
                                 Title = null;
                             }));
                             output?.Dispose();
@@ -392,8 +392,8 @@ namespace EmergenceGuardian.VapourSynthUI {
             if (output != null) {
                 lock (outputLock) {
                     if (output != null) {
-                        if ((force || IsPlaying) && posRequested < vi.NumFrames)
-                            output?.GetFrameAsync(posRequested++);
+                        if ((force || IsPlaying) && posRequested < vi.NumFrames - 1)
+                            output?.GetFrameAsync(++posRequested);
                     }
                 }
             }
@@ -423,14 +423,16 @@ namespace EmergenceGuardian.VapourSynthUI {
             VsPlane plane = e.Frame.GetPlane(0);
 
             Dispatcher.Invoke(new Action(() => {
-                try {
-                    Bmp.Lock();
-                    VsHelper.BitBlt(Bmp.BackBuffer, Bmp.BackBufferStride, plane.Ptr, plane.Stride, plane.Width * 4, plane.Height);
-                    Bmp.AddDirtyRect(new Int32Rect(0, 0, plane.Width, plane.Height));
-                } finally {
-                    Bmp.Unlock();
+                if (!IsErrorVisible) {
+                    try {
+                        Bmp.Lock();
+                        VsHelper.BitBlt(Bmp.BackBuffer, Bmp.BackBufferStride, plane.Ptr, plane.Stride, plane.Width * 4, plane.Height);
+                        Bmp.AddDirtyRect(new Int32Rect(0, 0, plane.Width, plane.Height));
+                    } finally {
+                        Bmp.Unlock();
+                    }
+                    SetPositionNoSeek(TimeSpan.FromSeconds(e.Index));
                 }
-                SetPositionNoSeek(TimeSpan.FromSeconds(e.Index));
             }));
         }
 
