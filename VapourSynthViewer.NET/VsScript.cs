@@ -13,7 +13,7 @@ namespace EmergenceGuardian.VapourSynthViewer {
             VsHelper.Init();
         }
 
-        private IntPtr handle = IntPtr.Zero;
+        private readonly IntPtr handle = IntPtr.Zero;
 
         private VsScript() { }
 

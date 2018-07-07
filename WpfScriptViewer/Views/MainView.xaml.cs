@@ -18,9 +18,5 @@ namespace EmergenceGuardian.WpfScriptViewer {
                 Environment.Exit(0);
             };
         }
-
-        private void UI_Loaded(object sender, RoutedEventArgs e) {
-
-        }
     }
 }

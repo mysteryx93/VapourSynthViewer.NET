@@ -1,5 +1,6 @@
 ﻿using GalaSoft.MvvmLight.Command;
 using System;
+using System.Windows;
 
 namespace EmergenceGuardian.WpfScriptViewer {
     public interface IScriptViewModel : IWorkspaceViewModel {

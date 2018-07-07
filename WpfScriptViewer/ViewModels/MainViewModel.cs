@@ -2,6 +2,7 @@
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
+using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using EmergenceGuardian.WpfExtensions;
@@ -187,7 +188,22 @@ namespace EmergenceGuardian.WpfScriptViewer {
         public void Window_Loaded() {
             // Load script file from command-line.
             if (environmentService.CommandLineArguments.Count() > 1)
-                ReadScriptFile(environmentService.CommandLineArguments.ElementAt(1));
+                if (!ReadScriptFile(environmentService.CommandLineArguments.ElementAt(1)))
+                    if (CloseCommand.CanExecute(null))
+                        CloseCommand.Execute(null);
+        }
+
+        public void Window_DropFile(DragEventArgs e) {
+            if (e.Data.GetDataPresent(DataFormats.FileDrop)) {
+                string[] files = (string[])e.Data.GetData(DataFormats.FileDrop);
+                if (files.Length > 0)
+                    ReadScriptFile(files[0]);
+            }
+        }
+
+        public void Window_PreviewDragOver(DragEventArgs e) {
+            e.Effects = DragDropEffects.All;
+            e.Handled = true;
         }
 
         public void Header_PreviewLeftMouseButtonDown(ScriptViewModel sender, MouseButtonEventArgs e) {
@@ -226,8 +242,6 @@ namespace EmergenceGuardian.WpfScriptViewer {
                 return true;
             } catch (Exception ex) {
                 dialogService.ShowMessageBox(this, ex.Message, "Error loading file");
-                if (CloseCommand.CanExecute(null))
-                    CloseCommand.Execute(null);
                 return false;
             }
         }

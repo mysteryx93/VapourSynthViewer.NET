@@ -7,10 +7,10 @@
         xmlns:local="clr-namespace:EmergenceGuardian.WpfScriptViewer"
         xmlns:wpf="clr-namespace:EmergenceGuardian.WpfExtensions;assembly=WpfExtensions"
         xmlns:i="http://schemas.microsoft.com/expression/2010/interactivity"
-        x:Class="EmergenceGuardian.WpfScriptViewer.MainView"
-        mc:Ignorable="d" Title="VapourSynth Multi-Viewer" Height="450" Width="800" 
-        WindowState="Maximized" DataContext="{Binding Main, Source={StaticResource Locator}}" x:Name="UI"
-        Loaded="{wpf:MethodBinding Window_Loaded}" Style="{StaticResource WindowDefaultStyle}">
+        x:Class="EmergenceGuardian.WpfScriptViewer.MainView" mc:Ignorable="d" Title="VapourSynth Multi-Viewer"
+        Height="450" Width="800" WindowState="Maximized" DataContext="{Binding Main, Source={StaticResource Locator}}"
+        x:Name="UI" Loaded="{wpf:MethodBinding Window_Loaded}" Style="{StaticResource WindowDefaultStyle}"
+        AllowDrop="True" Drop="{wpf:MethodBinding Window_DropFile, {wpf:EventArgs}}" PreviewDragOver="{wpf:MethodBinding Window_PreviewDragOver, {wpf:EventArgs}}">
     <Window.Resources>
         <ResourceDictionary>
             <wpf:BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
@@ -26,11 +26,10 @@
         <Grid.InputBindings>
             <KeyBinding Key="F1" Command="{Binding HelpCommand, Mode=OneWay}" />
             <KeyBinding Key="R" Modifiers="Ctrl" Command="{Binding RunCommand, Mode=OneWay}" />
+            <KeyBinding Key="U" Modifiers="Ctrl" Command="{Binding UpdateAllCommand, Mode=OneWay}" />
             <KeyBinding Key="F4" Modifiers="Ctrl" Command="{Binding SelectedItem.CloseCommand, Mode=OneWay}" />
             <KeyBinding Key="Add" Command="{Binding ZoomInCommand, Mode=OneWay}" />
             <KeyBinding Key="Subtract" Command="{Binding ZoomOutCommand, Mode=OneWay}" />
-            <KeyBinding Key="OemPlus" Command="{Binding ZoomInCommand, Mode=OneWay}" />
-            <KeyBinding Key="OemMinus" Command="{Binding ZoomOutCommand, Mode=OneWay}" />
         </Grid.InputBindings>
         <TabControl x:Name="Tabs" Margin="0" Style="{StaticResource BorderlessTab}"
                 SelectionChanged="{wpf:MethodBinding Tabs_SelectionChanged}" wpf:TabControlBehavior.IsCached="True"
@@ -62,11 +61,11 @@
             <TabControl.Resources>
                 <DataTemplate DataType="{x:Type local:EditorViewModel}">
                     <TextBox x:Name="ScriptText" AcceptsReturn="True" VerticalScrollBarVisibility="Visible"
-                            HorizontalScrollBarVisibility="Auto" BorderThickness="1"
+                            HorizontalScrollBarVisibility="Auto" BorderThickness="1" wpf:FocusExtensions.FocusOnLoaded="True"
                             Text="{Binding Script, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" TabIndex="2" />
                 </DataTemplate>
                 <DataTemplate DataType="{x:Type local:ViewerViewModel}">
-                    <ui:MediaPlayerWpf x:Name="Player" IsVolumeVisible="False" IsSpeedVisible="False"
+                    <ui:MediaPlayerWpf x:Name="Player" IsVolumeVisible="False" IsSpeedVisible="False" ChangeVolumeOnMouseWheel="False"
                             IsStopVisible="False" IsLoopVisible="False" PositionDisplay="Seconds" TabIndex="2">
                         <ui:MediaPlayerWpf.InputBindings>
                             <KeyBinding Key="Space" Command="{Binding UI.PlayPauseCommand, ElementName=Player}" />
