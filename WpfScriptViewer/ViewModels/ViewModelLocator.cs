@@ -48,18 +48,18 @@ namespace EmergenceGuardian.WpfScriptViewer {
                 SimpleIoc.Default.Register<IHelpViewModel, DesignHelpViewModel>();
             else
                 SimpleIoc.Default.Register<IHelpViewModel, HelpViewModel>();
+            SimpleIoc.Default.Register<IInputViewModel, InputViewModel>();
             SimpleIoc.Default.Register<IEditorViewModel, EditorViewModel>();
             SimpleIoc.Default.Register<IViewerViewModel, ViewerViewModel>();
-            SimpleIoc.Default.Register<IRunViewModel, RunViewModel>();
         }
 
         public IDialogService DialogService => ServiceLocator.Current.GetInstance<IDialogService>();
         public IEnvironmentService EnvironmentService => ServiceLocator.Current.GetInstance<IEnvironmentService>();
         public MainViewModel Main => ServiceLocator.Current.GetInstance<MainViewModel>();
         public IHelpViewModel Help => ServiceLocator.Current.GetInstance<IHelpViewModel>();
-        public IEditorViewModel GetEditorViewModel() => SimpleIoc.Default.GetInstanceWithoutCaching<IEditorViewModel>();
-        public IViewerViewModel GetViewerViewModel() => SimpleIoc.Default.GetInstanceWithoutCaching<IViewerViewModel>();
-        public IRunViewModel GetRunViewModel() => SimpleIoc.Default.GetInstanceWithoutCaching<IRunViewModel>();
+        public IInputViewModel Input => SimpleIoc.Default.GetInstance<IInputViewModel>();
+        public IEditorViewModel GetEditor() => SimpleIoc.Default.GetInstanceWithoutCaching<IEditorViewModel>();
+        public IViewerViewModel GetViewer() => SimpleIoc.Default.GetInstanceWithoutCaching<IViewerViewModel>();
 
         public static void Cleanup() => SimpleIoc.Default.Reset();
 
@@ -69,6 +69,8 @@ namespace EmergenceGuardian.WpfScriptViewer {
                     return typeof(MainView);
                 else if (viewModel is IHelpViewModel)
                     return typeof(HelpView);
+                else if (viewModel is IInputViewModel)
+                    return typeof(InputView);
                 else
                     return null;
             }

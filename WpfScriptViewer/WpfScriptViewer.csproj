@@ -124,8 +124,10 @@
       <SubType>Designer</SubType>
     </ApplicationDefinition>
     <Compile Include="Helpers\Converters.cs" />
+    <Compile Include="Helpers\InputHelper.cs" />
     <Compile Include="ViewModels\DesignHelpViewModel.cs" />
     <Compile Include="ViewModels\HelpViewModel.cs" />
+    <Compile Include="ViewModels\InputViewModel.cs" />
     <Compile Include="ViewModels\MainViewModel.cs" />
     <Compile Include="ViewModels\ScriptViewModel.cs" />
     <Compile Include="ViewModels\ViewModelLocator.cs" />
@@ -133,11 +135,17 @@
     <Compile Include="Views\HelpView.xaml.cs">
       <DependentUpon>HelpView.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Views\InputView.xaml.cs">
+      <DependentUpon>InputView.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Views\MainView.xaml.cs">
       <DependentUpon>MainView.xaml</DependentUpon>
     </Compile>
     <Compile Include="Helpers\CommandHelper.cs" />
     <Page Include="Views\HelpView.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Views\InputView.xaml">
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Views\MainView.xaml">
@@ -200,6 +208,21 @@
   </ItemGroup>
   <ItemGroup>
     <Resource Include="App.ico" />
+    <Resource Include="Icons\MultiThreading.png" />
+    <Resource Include="Icons\New.png" />
+    <Resource Include="Icons\Refresh.png" />
+    <Resource Include="Icons\Run.png" />
+    <Resource Include="Icons\Save.png" />
+    <Resource Include="Icons\SaveAs.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Icons\Help.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Icons\GoTo.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Icons\Open.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

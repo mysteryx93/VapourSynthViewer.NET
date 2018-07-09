@@ -15,10 +15,10 @@
                             BorderThickness="{TemplateBinding BorderThickness}">
                         <Grid>
                             <Grid x:Name="PART_Host">
-                                <Image Stretch="Uniform" SnapsToDevicePixels="True" RenderOptions.BitmapScalingMode="HighQuality"
+                                <Image x:Name="PART_ImageFit" Stretch="Uniform" SnapsToDevicePixels="True" RenderOptions.BitmapScalingMode="HighQuality"
                                         Source="{Binding VideoSource, RelativeSource={RelativeSource TemplatedParent}, Mode=OneWay}"
                                         Visibility="{Binding ZoomScaleToFit, Converter={StaticResource BooleanToVisibilityConverter}, RelativeSource={RelativeSource TemplatedParent}}"/>
-                                <wpf:ZoomViewer
+                                <wpf:ZoomViewer x:Name="PART_Zoom"
                                         ScrollVerticalOffset="{Binding ScrollVerticalOffset, RelativeSource={RelativeSource TemplatedParent}, Mode=TwoWay}"
                                         ScrollHorizontalOffset="{Binding ScrollHorizontalOffset, RelativeSource={RelativeSource TemplatedParent}, Mode=TwoWay}"
                                         Zoom="{Binding Zoom, RelativeSource={RelativeSource TemplatedParent}, Mode=TwoWay}"

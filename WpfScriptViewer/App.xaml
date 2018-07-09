@@ -14,5 +14,13 @@
             <Setter Property="md:DialogServiceViews.IsRegistered" Value="True" />
             <Setter Property="UseLayoutRounding" Value="True" />
         </Style>
+
+        <Style x:Key="ImageEnabled" TargetType="Image">
+            <Style.Triggers>
+                <Trigger Property="IsEnabled" Value="False">
+                    <Setter Property="Opacity" Value="0.4"></Setter>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
     </Application.Resources>
 </Application>

@@ -1,4 +1,4 @@
-﻿#from vapoursynth import core
+#from vapoursynth import core
 import vapoursynth as vs
 core = vs.get_core()
 video = core.ffms2.Source(source="E:\\NaturalGrounding\\AOA\\Like a Cat (Dance Practice).mp4")

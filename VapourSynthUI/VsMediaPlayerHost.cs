@@ -7,9 +7,12 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using EmergenceGuardian.MediaPlayerUI;
 using EmergenceGuardian.VapourSynthViewer;
+using EmergenceGuardian.WpfExtensions;
 
 namespace EmergenceGuardian.VapourSynthUI {
     [TemplatePart(Name = VsMediaPlayerHost.PART_Host, Type = typeof(Grid))]
+    [TemplatePart(Name = VsMediaPlayerHost.PART_ImageFit, Type = typeof(Image))]
+    [TemplatePart(Name = VsMediaPlayerHost.PART_Zoom, Type = typeof(ZoomViewer))]
     public class VsMediaPlayerHost : PlayerBase {
 
         #region Declarations / Constructor
@@ -20,6 +23,10 @@ namespace EmergenceGuardian.VapourSynthUI {
 
         public const string PART_Host = "PART_Host";
         public Grid PartHost => GetTemplateChild(PART_Host) as Grid;
+        public const string PART_ImageFit = "PART_ImageFit";
+        public Image PartImageFit => GetTemplateChild(PART_ImageFit) as Image;
+        public const string PART_Zoom = "PART_Zoom";
+        public ZoomViewer PartZoom => GetTemplateChild(PART_Zoom) as ZoomViewer;
 
         private int posRequested;
         private VsScript scriptApi;
@@ -197,11 +204,27 @@ namespace EmergenceGuardian.VapourSynthUI {
             if (!DesignerProperties.GetIsInDesignMode(this)) {
                 Loaded += delegate {
                     Dispatcher.ShutdownStarted += Dispatcher_ShutdownStarted;
+                    PartImageFit.PreviewMouseWheel += PartImageFit_PreviewMouseWheel;
+                    PartImageFit.MouseRightButtonDown += PartImageFit_MouseRightButtonDown;
                 };
                 Unloaded += delegate {
                     Dispatcher.ShutdownStarted -= Dispatcher_ShutdownStarted;
+                    PartImageFit.PreviewMouseWheel -= PartImageFit_PreviewMouseWheel;
+                    PartImageFit.MouseRightButtonDown -= PartImageFit_MouseRightButtonDown;
                     //Stop(); Object can be unloaded for many reasons, we can't stop here.
                 };
+            }
+        }
+
+        private void PartImageFit_MouseRightButtonDown(object sender, System.Windows.Input.MouseButtonEventArgs e) {
+            if (PartZoom.AllowReset)
+                PartZoom.Reset();
+        }
+
+        private void PartImageFit_PreviewMouseWheel(object sender, System.Windows.Input.MouseWheelEventArgs e) {
+            if (PartZoom.AllowZoom && ZoomScaleToFit) {
+                Zoom = 1;
+                ZoomScaleToFit = false;
             }
         }
 
@@ -342,9 +365,9 @@ namespace EmergenceGuardian.VapourSynthUI {
                         return;
                     }
 
-                    SetPositionNoSeek(TimeSpan.FromSeconds(-1));
+                    SetPositionNoSeek(TimeSpan.Zero);
                     Duration = TimeSpan.FromSeconds(1);
-                    posRequested = 0;
+                    posRequested = -1;
                     ErrorMessage = null;
                     IsErrorVisible = false;
                     if (script != null)
@@ -363,6 +386,8 @@ namespace EmergenceGuardian.VapourSynthUI {
                 VideoSource = Bmp;
                 LimitFpsChanged(LimitFps);
                 base.MediaLoaded();
+                if (Position == TimeSpan.Zero)
+                    PositionChanged(TimeSpan.Zero, true);
                 await Task.Yield();
                 ScrollVerticalOffset = ScrollVerticalOffset;
                 ScrollHorizontalOffset = ScrollHorizontalOffset;

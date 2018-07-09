@@ -1,13 +1,5 @@
 ﻿using GalaSoft.MvvmLight.Threading;
-using System;
-using System.Collections.Generic;
-using System.Configuration;
-using System.Data;
-using System.Linq;
-using System.Threading.Tasks;
 using System.Windows;
-using GalaSoft.MvvmLight.Ioc;
-using EmergenceGuardian.WpfExtensions;
 
 namespace EmergenceGuardian.WpfScriptViewer {
     /// <summary>

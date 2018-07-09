@@ -7,9 +7,12 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using EmergenceGuardian.WpfExtensions;
 using GalaSoft.MvvmLight;
-using GalaSoft.MvvmLight.Command;
+using GalaSoft.MvvmLight.CommandWpf;
 using GalaSoft.MvvmLight.Ioc;
 using MvvmDialogs;
+using MvvmDialogs.FrameworkDialogs.OpenFile;
+using MvvmDialogs.FrameworkDialogs.SaveFile;
+using GalaSoft.MvvmLight.Threading;
 
 namespace EmergenceGuardian.WpfScriptViewer {
     public class MainViewModel : WorkspaceViewModel {
@@ -17,34 +20,43 @@ namespace EmergenceGuardian.WpfScriptViewer {
         #region Declarations / Constructor
 
         public MainViewModel() {
-            editorModel = ViewModelLocator.Instance.GetEditorViewModel();
-            ScriptList.Add(editorModel);
-            runModel = ViewModelLocator.Instance.GetRunViewModel();
-            ScriptList.Add(runModel);
-            ScriptList.CollectionChanged += delegate { updateAllCommand?.RaiseCanExecuteChanged(); };
         }
 
         [PreferredConstructor]
         public MainViewModel(IDialogService modalDialogService, IEnvironmentService environmentService) : this() {
             this.dialogService = modalDialogService;
             this.environmentService = environmentService;
+
+            // Load script file from command-line.
+            bool IsFirst = true; // First is application name.
+            foreach (string arg in environmentService.CommandLineArguments) {
+                if (IsFirst)
+                    IsFirst = false;
+                else
+                    ReadScriptFile(arg);
+            }
+
+            if (!ScriptList.Any())
+                OnNew();
+
+            ScriptList.CollectionChanged += delegate { updateAllCommand?.RaiseCanExecuteChanged(); };
         }
 
         private readonly IDialogService dialogService;
         private readonly IEnvironmentService environmentService;
 
         public ObservableCollection<IScriptViewModel> ScriptList { get; private set; } = new ObservableCollection<IScriptViewModel>();
-        private readonly IEditorViewModel editorModel;
-        private readonly IRunViewModel runModel;
 
-        private double scrollVerticalOffset;
         private double scrollHorizontalOffset;
+        private double scrollVerticalOffset;
         private IScriptViewModel selectedItem;
         private TimeSpan playerPosition;
         private double zoom = 1;
         private ObservableCollection<string> zoomList;
         private bool isMultiThreaded = false;
-        private int autoIndex = 0;
+        private int editorIndex = 0;
+        private int viewerIndex = 0;
+        private const string FileFilter = "VapourSynth Script|*.vpy|All files|*.*";
 
         // These are bound to the UI.
         public double MinZoom { get; } = 0.1;
@@ -56,24 +68,26 @@ namespace EmergenceGuardian.WpfScriptViewer {
 
         #region Properties
 
-        public double ScrollVerticalOffset {
-            get => scrollVerticalOffset;
-            set => Set<double>(() => ScrollVerticalOffset, ref scrollVerticalOffset, value);
-        }
-
-        public double ScrollHorizontalOffset {
-            get => scrollHorizontalOffset;
-            set => Set<double>(() => ScrollHorizontalOffset, ref scrollHorizontalOffset, value);
-        }
-
         public IScriptViewModel SelectedItem {
             get => selectedItem;
             set {
                 // If we had a viewer tab selected, keep its position for other tabs.
-                if (selectedItem is ViewerViewModel oldViewer && oldViewer.ErrorMessage == null)
+                if (selectedItem is ViewerViewModel oldViewer && oldViewer.ErrorMessage == null) {
                     playerPosition = oldViewer.Position;
-                if (Set<IScriptViewModel>(() => SelectedItem, ref selectedItem, value) && value is IViewerViewModel newViewer)
-                    newViewer.Position = newViewer.ErrorMessage == null ? playerPosition : TimeSpan.Zero;
+                    // If we bind scroll directly to MainViewModel, when there are several tabs and we zoom, 
+                    // zoom can change in 3 tabs and cumulate the effect on the scroll. We instead bind scroll on ScriptViewModel.
+                    scrollHorizontalOffset = oldViewer.ScrollHorizontalOffset;
+                    scrollVerticalOffset = oldViewer.ScrollVerticalOffset;
+                }
+                if (Set<IScriptViewModel>(() => SelectedItem, ref selectedItem, value) && value is IViewerViewModel newViewer) {
+                    if (newViewer.ErrorMessage == null) {
+                        newViewer.Position = playerPosition;
+                        newViewer.ScrollHorizontalOffset = scrollHorizontalOffset;
+                        newViewer.ScrollVerticalOffset = scrollVerticalOffset;
+                    } else
+                        newViewer.Position = TimeSpan.Zero;
+                }
+                CommandManager.InvalidateRequerySuggested();
             }
         }
 
@@ -127,26 +141,91 @@ namespace EmergenceGuardian.WpfScriptViewer {
 
         #region Commands
 
+        private RelayCommand newCommand;
+        public RelayCommand NewCommand => this.InitCommand(ref newCommand, OnNew, CanNew);
+
+        private bool CanNew() => true;
+        private void OnNew() {
+            AddTab(ViewModelLocator.Instance.GetEditor(), ++editorIndex, null, "Script " + editorIndex.ToString());
+        }
+
+        private RelayCommand openCommand;
+        public RelayCommand OpenCommand => this.InitCommand(ref openCommand, OnOpen, CanOpen);
+
+        private bool CanOpen() => true;
+        private void OnOpen() {
+            OpenFileDialogSettings OpenSettings = new OpenFileDialogSettings() {
+                DefaultExt = ".vpy",
+                Filter = FileFilter,
+                CheckFileExists = true
+            };
+            if (dialogService.ShowOpenFileDialog(this, OpenSettings) == true)
+                ReadScriptFile(OpenSettings.FileName);
+        }
+
+        private RelayCommand saveCommand;
+        public RelayCommand SaveCommand => this.InitCommand(ref saveCommand, OnSave, CanSave);
+
+        private bool CanSave() => SelectedItem is IEditorViewModel;
+        private void OnSave() {
+            if (SelectedItem is IEditorViewModel item) {
+                if (item.FileName == null)
+                    OnSaveAs();
+                else
+                    File.WriteAllText(item.FileName, item.Script);
+            }
+        }
+
+        private RelayCommand saveAsCommand;
+        public RelayCommand SaveAsCommand => this.InitCommand(ref saveAsCommand, OnSaveAs, CanSaveAs);
+
+        private bool CanSaveAs() => SelectedItem is IEditorViewModel;
+        private void OnSaveAs() {
+            if (SelectedItem is IEditorViewModel item) {
+                SaveFileDialogSettings SaveSettings = new SaveFileDialogSettings() {
+                    DefaultExt = ".vpy",
+                    Filter = FileFilter,
+                    CheckFileExists = false,
+                    CheckPathExists = true,
+                    OverwritePrompt = true
+                };
+                if (dialogService.ShowSaveFileDialog(this, SaveSettings) == true) {
+                    File.WriteAllText(SaveSettings.FileName, item.Script);
+                    item.FileName = SaveSettings.FileName;
+                    item.DisplayName = Path.GetFileName(item.FileName);
+                }
+            }
+        }
+
         private RelayCommand runCommand;
         public RelayCommand RunCommand => this.InitCommand(ref runCommand, OnRun, CanRun);
 
-        private bool CanRun() => !string.IsNullOrWhiteSpace(ScriptList.First().Script);
+        private bool CanRun() => SelectedItem is IEditorViewModel;
         private void OnRun() {
-            // If a viewer already has same script, activate it.
-            string Script = editorModel.Script;
-            for (int i = 1; i < ScriptList.Count - 1; i++) {
-                if (ScriptList[i].Script == Script) {
-                    SelectedItem = ScriptList[i];
-                    return;
-                }
+            AddTab(ViewModelLocator.Instance.GetViewer(), ++viewerIndex, SelectedItem.Script, "Viewer " + viewerIndex.ToString());
+        }
+
+        private RelayCommand goToCommand;
+        public RelayCommand GoToCommand => this.InitCommand(ref goToCommand, OnGoTo, CanGoTo);
+
+        private bool CanGoTo() => SelectedItem is IViewerViewModel;
+        private void OnGoTo() {
+            if (SelectedItem is IViewerViewModel viewer) {
+                object Result = InputHelper.RequestInput<int>(this, dialogService, 
+                    "Go To Frame...", "Enter frame number:", (int)viewer.Position.TotalSeconds, new Func<int, bool>((e) => {
+                        return e >= 0 && e <= (int)viewer.Duration.TotalSeconds;
+                }));
+                if (Result != null)
+                    viewer.Position = TimeSpan.FromSeconds((int)Result);
             }
-            // Otherwise, create new viewer. Insert before Run tab.
-            IScriptViewModel Viewer = ViewModelLocator.Instance.GetViewerViewModel();
-            Viewer.DisplayName = "Viewer " + ++autoIndex;
-            Viewer.Script = Script;
-            Viewer.RequestClose += Viewer_RequestClose;
-            ScriptList.Insert(ScriptList.Count - 1, Viewer);
-            SelectedItem = Viewer;
+        }
+
+        private RelayCommand toggleMultiThreadedCommand;
+        public RelayCommand ToggleMultiThreadedCommand => this.InitCommand(ref toggleMultiThreadedCommand, OnToggleMultiThreaded, CanToggleMultiThreaded);
+
+        private bool CanToggleMultiThreaded() => true;
+        private void OnToggleMultiThreaded() {
+            IsMultiThreaded = !IsMultiThreaded;
         }
 
         private RelayCommand updateAllCommand;
@@ -162,13 +241,24 @@ namespace EmergenceGuardian.WpfScriptViewer {
             }
         }
 
-        private RelayCommand<int> switchTabCommand;
-        public RelayCommand<int> SwitchTabCommand => this.InitCommand<int>(ref switchTabCommand, OnSwitchTab, CanSwitchTab);
+        private RelayCommand<int> selectEditorCommand;
+        public RelayCommand<int> SelectEditorCommand => this.InitCommand<int>(ref selectEditorCommand, OnSelectEditor, CanSelectEditor);
 
-        private bool CanSwitchTab(int index) => index < ScriptList.Count;
-        private void OnSwitchTab(int index) {
-            if (index < ScriptList.Count)
-                SelectedItem = ScriptList[index];
+        private bool CanSelectEditor(int index) => index < ScriptList.OfType<IEditorViewModel>().Count();
+        private void OnSelectEditor(int index) {
+            var Editors = ScriptList.OfType<IEditorViewModel>();
+            if (index < Editors.Count())
+                SelectedItem = Editors.ElementAt(index);
+        }
+
+        private RelayCommand<int> selectViewerCommand;
+        public RelayCommand<int> SelectViewerCommand => this.InitCommand<int>(ref selectViewerCommand, OnSelectViewer, CanSelectViewer);
+
+        private bool CanSelectViewer(int index) => SelectedItem is IViewerViewModel && index < ScriptList.OfType<IViewerViewModel>().Count();
+        private void OnSelectViewer(int index) {
+            var Viewers = ScriptList.OfType<IViewerViewModel>();
+            if (index < Viewers.Count())
+                SelectedItem = Viewers.ElementAt(index);
         }
 
         private RelayCommand zoomInCommand;
@@ -176,7 +266,12 @@ namespace EmergenceGuardian.WpfScriptViewer {
 
         private bool CanZoomIn() => true;
         private void OnZoomIn() {
-            Zoom *= ZoomIncrement;
+            if (ZoomScaleToFit) {
+                Zoom = 1;
+                ZoomScaleToFit = false;
+            } else
+                Zoom *= ZoomIncrement;
+
         }
 
         private RelayCommand zoomOutCommand;
@@ -184,7 +279,11 @@ namespace EmergenceGuardian.WpfScriptViewer {
 
         private bool CanZoomOut() => true;
         private void OnZoomOut() {
-            Zoom /= ZoomIncrement;
+            if (ZoomScaleToFit) {
+                Zoom = 1;
+                ZoomScaleToFit = false;
+            } else
+                Zoom /= ZoomIncrement;
         }
 
         private RelayCommand helpCommand;
@@ -195,22 +294,23 @@ namespace EmergenceGuardian.WpfScriptViewer {
             dialogService.ShowDialog(this, ViewModelLocator.Instance.Help);
         }
 
+        private RelayCommand renameCommand;
+        public RelayCommand RenameCommand => this.InitCommand(ref renameCommand, OnRename, CanRename);
+
+        private bool CanRename() => SelectedItem.CanEditHeader;
+        private void OnRename() {
+            SelectedItem.IsEditingHeader = true;
+        }
+
         #endregion
 
-
-        public void Window_Loaded() {
-            // Load script file from command-line.
-            if (environmentService.CommandLineArguments.Count() > 1)
-                if (!ReadScriptFile(environmentService.CommandLineArguments.ElementAt(1)))
-                    if (CloseCommand.CanExecute(null))
-                        CloseCommand.Execute(null);
-        }
 
         public void Window_DropFile(DragEventArgs e) {
             if (e.Data.GetDataPresent(DataFormats.FileDrop)) {
                 string[] files = (string[])e.Data.GetData(DataFormats.FileDrop);
-                if (files.Length > 0)
-                    ReadScriptFile(files[0]);
+                foreach (string file in files) {
+                    ReadScriptFile(file);
+                }
             }
         }
 
@@ -219,19 +319,23 @@ namespace EmergenceGuardian.WpfScriptViewer {
             e.Handled = true;
         }
 
-        public void Header_PreviewLeftMouseButtonDown(ScriptViewModel sender, MouseButtonEventArgs e) {
-            if (sender == SelectedItem && sender.CanEditHeader && !sender.IsEditingHeader) {
-                sender.IsEditingHeader = true;
-                e.Handled = true;
+        /// <summary>
+        /// Keys 0-9 allow switching between viewer tabs but this also handles those keys for the editor textbox. Allow those keys to pass through.
+        /// </summary>
+        public void Editor_PreviewKeyDown(Control sender, System.Windows.Input.KeyEventArgs e) {
+            if (Keyboard.Modifiers == ModifierKeys.None && e.Key >= Key.D0 && e.Key <= Key.D9) {
+                string KeyText = new KeyConverter().ConvertToString(e.Key);
+                sender.RaiseEvent(new TextCompositionEventArgs(InputManager.Current.PrimaryKeyboardDevice,
+                    new TextComposition(InputManager.Current, sender, KeyText)) {
+                    RoutedEvent = TextCompositionManager.TextInputEvent
+                });
             }
         }
 
-        public void Tabs_SelectionChanged() {
-            if (SelectedItem == runModel) {
-                if (CanRun())
-                    OnRun();
-                else
-                    SelectedItem = editorModel;
+        public void Header_PreviewLeftMouseButtonDown(IScriptViewModel sender, MouseButtonEventArgs e) {
+            if (sender == SelectedItem && sender.CanEditHeader && !sender.IsEditingHeader) {
+                sender.IsEditingHeader = true;
+                e.Handled = true;
             }
         }
 
@@ -241,22 +345,35 @@ namespace EmergenceGuardian.WpfScriptViewer {
         }
 
         private void Viewer_RequestClose(object sender, EventArgs e) {
-            ScriptViewModel Model = sender as ScriptViewModel;
+            IScriptViewModel Model = sender as IScriptViewModel;
             Model.Script = null;
             // Remove and select previous tab.
             int Pos = ScriptList.IndexOf(Model);
-            SelectedItem = ScriptList[Pos - 1];
+            // SelectedItem = ScriptList[Pos - 1];
             ScriptList.RemoveAt(Pos);
         }
 
         public bool ReadScriptFile(string file) {
             try {
-                editorModel.Script = File.ReadAllText(file);
+                string FileContent = File.ReadAllText(file);
+                IEditorViewModel ViewModel = ViewModelLocator.Instance.GetEditor();
+                ViewModel.FileName = file;
+                AddTab(ViewModel, ++editorIndex, FileContent, Path.GetFileName(file));
                 return true;
             } catch (Exception ex) {
                 dialogService.ShowMessageBox(this, ex.Message, "Error loading file");
                 return false;
             }
+        }
+
+        private void AddTab(IScriptViewModel viewModel, int index, string script, string title) {
+            if (title != null)
+                viewModel.DisplayName = title;
+            viewModel.Index = index;
+            viewModel.Script = script;
+            viewModel.RequestClose += Viewer_RequestClose;
+            ScriptList.Add(viewModel);
+            SelectedItem = viewModel;
         }
     }
 }
