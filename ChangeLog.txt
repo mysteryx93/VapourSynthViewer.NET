@@ -1,6 +1,6 @@
 VapourSynth Multi-Viewer Change Log
 
-v9.0
+v9.0 (2018-07-09)
 - Allow opening and saving files
 - Allow several script editor tabs
 - Moved all controls into a toolbar
