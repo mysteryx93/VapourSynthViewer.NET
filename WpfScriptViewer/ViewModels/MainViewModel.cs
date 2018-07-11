@@ -5,6 +5,7 @@ using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using System.Windows.Threading;
 using EmergenceGuardian.WpfExtensions;
 using GalaSoft.MvvmLight;
 using GalaSoft.MvvmLight.CommandWpf;
@@ -20,26 +21,13 @@ namespace EmergenceGuardian.WpfScriptViewer {
         #region Declarations / Constructor
 
         public MainViewModel() {
+            OnNew();
         }
 
         [PreferredConstructor]
-        public MainViewModel(IDialogService modalDialogService, IEnvironmentService environmentService) : this() {
+        public MainViewModel(IDialogService modalDialogService, IEnvironmentService environmentService) {
             this.dialogService = modalDialogService;
             this.environmentService = environmentService;
-
-            // Load script file from command-line.
-            bool IsFirst = true; // First is application name.
-            foreach (string arg in environmentService.CommandLineArguments) {
-                if (IsFirst)
-                    IsFirst = false;
-                else
-                    ReadScriptFile(arg);
-            }
-
-            if (!ScriptList.Any())
-                OnNew();
-
-            ScriptList.CollectionChanged += delegate { updateAllCommand?.RaiseCanExecuteChanged(); };
         }
 
         private readonly IDialogService dialogService;
@@ -63,6 +51,16 @@ namespace EmergenceGuardian.WpfScriptViewer {
         public double MaxZoom { get; } = 10;
         public double ZoomIncrement { get; } = 1.2;
 
+        // Displays and updates text via events because TextEditor.Text doesn't support binding because 
+        // updating the dependency property on every key press would cause performance issue on large documents.
+        public event EventHandler<EditorTextEventArgs> DisplayScript;
+        public event EventHandler<EditorTextEventArgs> UpdateScript;
+
+        private const string DefaultScript = 
+@"import vapoursynth as vs
+core = vs.get_core()
+";
+
         #endregion
 
 
@@ -72,20 +70,23 @@ namespace EmergenceGuardian.WpfScriptViewer {
             get => selectedItem;
             set {
                 // If we had a viewer tab selected, keep its position for other tabs.
-                if (selectedItem is ViewerViewModel oldViewer && oldViewer.ErrorMessage == null) {
+                if (selectedItem is IViewerViewModel oldViewer && oldViewer.ErrorMessage == null) {
                     playerPosition = oldViewer.Position;
                     // If we bind scroll directly to MainViewModel, when there are several tabs and we zoom, 
                     // zoom can change in 3 tabs and cumulate the effect on the scroll. We instead bind scroll on ScriptViewModel.
                     scrollHorizontalOffset = oldViewer.ScrollHorizontalOffset;
                     scrollVerticalOffset = oldViewer.ScrollVerticalOffset;
                 }
-                if (Set<IScriptViewModel>(() => SelectedItem, ref selectedItem, value) && value is IViewerViewModel newViewer) {
-                    if (newViewer.ErrorMessage == null) {
-                        newViewer.Position = playerPosition;
-                        newViewer.ScrollHorizontalOffset = scrollHorizontalOffset;
-                        newViewer.ScrollVerticalOffset = scrollVerticalOffset;
-                    } else
-                        newViewer.Position = TimeSpan.Zero;
+
+                if (Set<IScriptViewModel>(() => SelectedItem, ref selectedItem, value)) {
+                    if (value is IViewerViewModel newViewer) {
+                        if (newViewer.ErrorMessage == null) {
+                            newViewer.Position = playerPosition;
+                            newViewer.ScrollHorizontalOffset = scrollHorizontalOffset;
+                            newViewer.ScrollVerticalOffset = scrollVerticalOffset;
+                        } else
+                            newViewer.Position = TimeSpan.Zero;
+                    }
                 }
                 CommandManager.InvalidateRequerySuggested();
             }
@@ -146,7 +147,9 @@ namespace EmergenceGuardian.WpfScriptViewer {
 
         private bool CanNew() => true;
         private void OnNew() {
-            AddTab(ViewModelLocator.Instance.GetEditor(), ++editorIndex, null, "Script " + editorIndex.ToString());
+            IEditorViewModel Editor = ViewModelLocator.Instance.GetEditor();
+            AddTab(Editor, ++editorIndex, "Script " + editorIndex.ToString());
+            DisplayScript?.Invoke(this, new EditorTextEventArgs(Editor, DefaultScript));
         }
 
         private RelayCommand openCommand;
@@ -172,7 +175,7 @@ namespace EmergenceGuardian.WpfScriptViewer {
                 if (item.FileName == null)
                     OnSaveAs();
                 else
-                    File.WriteAllText(item.FileName, item.Script);
+                    File.WriteAllText(item.FileName, GetEditorText());
             }
         }
 
@@ -190,7 +193,7 @@ namespace EmergenceGuardian.WpfScriptViewer {
                     OverwritePrompt = true
                 };
                 if (dialogService.ShowSaveFileDialog(this, SaveSettings) == true) {
-                    File.WriteAllText(SaveSettings.FileName, item.Script);
+                   File.WriteAllText(SaveSettings.FileName, GetEditorText());
                     item.FileName = SaveSettings.FileName;
                     item.DisplayName = Path.GetFileName(item.FileName);
                 }
@@ -202,7 +205,9 @@ namespace EmergenceGuardian.WpfScriptViewer {
 
         private bool CanRun() => SelectedItem is IEditorViewModel;
         private void OnRun() {
-            AddTab(ViewModelLocator.Instance.GetViewer(), ++viewerIndex, SelectedItem.Script, "Viewer " + viewerIndex.ToString());
+            IViewerViewModel Viewer = ViewModelLocator.Instance.GetViewer();
+            Viewer.Script = GetEditorText();
+            AddTab(Viewer, ++viewerIndex, "Viewer " + viewerIndex.ToString());
         }
 
         private RelayCommand goToCommand;
@@ -211,10 +216,10 @@ namespace EmergenceGuardian.WpfScriptViewer {
         private bool CanGoTo() => SelectedItem is IViewerViewModel;
         private void OnGoTo() {
             if (SelectedItem is IViewerViewModel viewer) {
-                object Result = InputHelper.RequestInput<int>(this, dialogService, 
+                object Result = InputHelper.RequestInput<int>(this, dialogService,
                     "Go To Frame...", "Enter frame number:", (int)viewer.Position.TotalSeconds, new Func<int, bool>((e) => {
                         return e >= 0 && e <= (int)viewer.Duration.TotalSeconds;
-                }));
+                    }));
                 if (Result != null)
                     viewer.Position = TimeSpan.FromSeconds((int)Result);
             }
@@ -304,6 +309,21 @@ namespace EmergenceGuardian.WpfScriptViewer {
 
         #endregion
 
+        public void Window_Loaded() {
+            // Load script file from command-line.
+            bool IsFirst = true; // First is application name.
+            foreach (string arg in environmentService.CommandLineArguments) {
+                if (IsFirst)
+                    IsFirst = false;
+                else
+                    ReadScriptFile(arg);
+            }
+
+            if (!ScriptList.Any())
+                OnNew();
+
+            ScriptList.CollectionChanged += delegate { updateAllCommand?.RaiseCanExecuteChanged(); };
+        }
 
         public void Window_DropFile(DragEventArgs e) {
             if (e.Data.GetDataPresent(DataFormats.FileDrop)) {
@@ -344,9 +364,10 @@ namespace EmergenceGuardian.WpfScriptViewer {
                 viewer.Position = playerPosition;
         }
 
-        private void Viewer_RequestClose(object sender, EventArgs e) {
+        private void Script_RequestClose(object sender, EventArgs e) {
             IScriptViewModel Model = sender as IScriptViewModel;
-            Model.Script = null;
+            if (Model is IViewerViewModel viewer)
+                viewer.Script = null;
             // Remove and select previous tab.
             int Pos = ScriptList.IndexOf(Model);
             // SelectedItem = ScriptList[Pos - 1];
@@ -358,7 +379,8 @@ namespace EmergenceGuardian.WpfScriptViewer {
                 string FileContent = File.ReadAllText(file);
                 IEditorViewModel ViewModel = ViewModelLocator.Instance.GetEditor();
                 ViewModel.FileName = file;
-                AddTab(ViewModel, ++editorIndex, FileContent, Path.GetFileName(file));
+                AddTab(ViewModel, ++editorIndex, Path.GetFileName(file));
+                DisplayScript?.Invoke(this, new EditorTextEventArgs(ViewModel, FileContent));
                 return true;
             } catch (Exception ex) {
                 dialogService.ShowMessageBox(this, ex.Message, "Error loading file");
@@ -366,14 +388,28 @@ namespace EmergenceGuardian.WpfScriptViewer {
             }
         }
 
-        private void AddTab(IScriptViewModel viewModel, int index, string script, string title) {
+        private void AddTab(IScriptViewModel viewModel, int index, string title) {
             if (title != null)
                 viewModel.DisplayName = title;
             viewModel.Index = index;
-            viewModel.Script = script;
-            viewModel.RequestClose += Viewer_RequestClose;
+            viewModel.RequestClose += Script_RequestClose;
             ScriptList.Add(viewModel);
             SelectedItem = viewModel;
         }
+
+        private string GetEditorText() {
+            EditorTextEventArgs Args = new EditorTextEventArgs(SelectedItem as IEditorViewModel);
+            UpdateScript?.Invoke(this, Args);
+            return Args.Script;
+        }
+    }
+
+    public class EditorTextEventArgs : EventArgs {
+        public IEditorViewModel ViewModel { get; set; }
+        public string Script { get; set; }
+
+        public EditorTextEventArgs() { }
+        public EditorTextEventArgs(IEditorViewModel viewModel) => ViewModel = viewModel;
+        public EditorTextEventArgs(IEditorViewModel viewModel, string script) : this(viewModel) => Script = script;
     }
 }

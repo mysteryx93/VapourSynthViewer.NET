@@ -1,11 +1,11 @@
 ﻿using GalaSoft.MvvmLight.CommandWpf;
+using ICSharpCode.AvalonEdit.Document;
 using System;
 using System.Windows;
 
 namespace EmergenceGuardian.WpfScriptViewer {
     public interface IScriptViewModel : IWorkspaceViewModel {
         bool CanEditHeader { get; }
-        string Script { get; set; }
         bool IsEditingHeader { get; set; }
         RelayCommand HeaderEditDoneCommand { get; }
         int Sort { get; }
@@ -13,18 +13,12 @@ namespace EmergenceGuardian.WpfScriptViewer {
     }
 
     public class ScriptViewModel : WorkspaceViewModel, IScriptViewModel {
-        private string script;
         private bool isEditingHeader = false;
         public bool CanEditHeader { get; protected set; } = true;
         private int index;
 
         public ScriptViewModel() { }
         public ScriptViewModel(string displayName, bool canClose) : base(displayName, canClose) { }
-
-        public string Script {
-            get => script;
-            set => Set<string>(() => Script, ref script, value);
-        }
 
         public bool IsEditingHeader {
             get => isEditingHeader;
@@ -66,6 +60,7 @@ namespace EmergenceGuardian.WpfScriptViewer {
     }
 
     public interface IViewerViewModel : IScriptViewModel {
+        string Script { get; set; }
         TimeSpan Position { get; set; }
         TimeSpan Duration { get; set; }
         string ErrorMessage { get; set; }
@@ -73,6 +68,7 @@ namespace EmergenceGuardian.WpfScriptViewer {
         double ScrollVerticalOffset { get; set; }
     }
     public class ViewerViewModel : ScriptViewModel, IViewerViewModel {
+        private string script;
         private string errorMessage;
         private TimeSpan position;
         private TimeSpan duration;
@@ -82,6 +78,11 @@ namespace EmergenceGuardian.WpfScriptViewer {
         public ViewerViewModel() {
             CanClose = true;
             Sort = 1;
+        }
+
+        public string Script {
+            get => script;
+            set => Set<string>(() => Script, ref script, value);
         }
 
         public string ErrorMessage {

@@ -1,5 +1,11 @@
 VapourSynth Multi-Viewer Change Log
 
+v9.1 (2018-07-11)
+- Replace script TextBox with AvalonEdit.TextEditor
+- Added syntax highlighing
+- Enlarged script font
+- Added default script
+
 v9.0 (2018-07-09)
 - Allow opening and saving files
 - Allow several script editor tabs

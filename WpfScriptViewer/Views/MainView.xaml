@@ -7,12 +7,14 @@
         xmlns:scm="clr-namespace:System.ComponentModel;assembly=WindowsBase"
         xmlns:local="clr-namespace:EmergenceGuardian.WpfScriptViewer"
         xmlns:wpf="clr-namespace:EmergenceGuardian.WpfExtensions;assembly=WpfExtensions"
+        xmlns:avalon="http://icsharpcode.net/sharpdevelop/avalonedit"
         xmlns:i="http://schemas.microsoft.com/expression/2010/interactivity"
         x:Class="EmergenceGuardian.WpfScriptViewer.MainView" mc:Ignorable="d" Title="VapourSynth Multi-Viewer"
         Height="450" Width="800" WindowState="Maximized" DataContext="{Binding Main, Source={StaticResource Locator}}"
         x:Name="UI" Style="{StaticResource WindowDefaultStyle}" AllowDrop="True"
         Drop="{wpf:MethodBinding Window_DropFile, {wpf:EventArgs}}"
-        PreviewDragOver="{wpf:MethodBinding Window_PreviewDragOver, {wpf:EventArgs}}">
+        PreviewDragOver="{wpf:MethodBinding Window_PreviewDragOver, {wpf:EventArgs}}"
+        Loaded="{wpf:MethodBinding Window_Loaded}">
     <Window.Resources>
         <ResourceDictionary>
             <CollectionViewSource x:Key="TabsList" Source="{Binding ScriptList, Mode=OneWay}">
@@ -45,16 +47,26 @@
             <KeyBinding Key="F4" Modifiers="Ctrl" Command="{Binding SelectedItem.CloseCommand, Mode=OneWay}" />
             <KeyBinding Key="Add" Command="{Binding ZoomInCommand, Mode=OneWay}" />
             <KeyBinding Key="Subtract" Command="{Binding ZoomOutCommand, Mode=OneWay}" />
-            <KeyBinding Key="D1" Modifiers="Ctrl" Command="{Binding SelectEditorCommand}" CommandParameter="{wpf:Int32 0}" />
-            <KeyBinding Key="D2" Modifiers="Ctrl" Command="{Binding SelectEditorCommand}" CommandParameter="{wpf:Int32 1}" />
-            <KeyBinding Key="D3" Modifiers="Ctrl" Command="{Binding SelectEditorCommand}" CommandParameter="{wpf:Int32 2}" />
-            <KeyBinding Key="D4" Modifiers="Ctrl" Command="{Binding SelectEditorCommand}" CommandParameter="{wpf:Int32 3}" />
-            <KeyBinding Key="D5" Modifiers="Ctrl" Command="{Binding SelectEditorCommand}" CommandParameter="{wpf:Int32 4}" />
-            <KeyBinding Key="D6" Modifiers="Ctrl" Command="{Binding SelectEditorCommand}" CommandParameter="{wpf:Int32 5}" />
-            <KeyBinding Key="D7" Modifiers="Ctrl" Command="{Binding SelectEditorCommand}" CommandParameter="{wpf:Int32 6}" />
-            <KeyBinding Key="D8" Modifiers="Ctrl" Command="{Binding SelectEditorCommand}" CommandParameter="{wpf:Int32 7}" />
-            <KeyBinding Key="D9" Modifiers="Ctrl" Command="{Binding SelectEditorCommand}" CommandParameter="{wpf:Int32 8}" />
-            <KeyBinding Key="D0" Modifiers="Ctrl" Command="{Binding SelectEditorCommand}" CommandParameter="{wpf:Int32 9}" />
+            <KeyBinding Key="D1" Modifiers="Ctrl" Command="{Binding SelectEditorCommand}"
+                    CommandParameter="{wpf:Int32 0}" />
+            <KeyBinding Key="D2" Modifiers="Ctrl" Command="{Binding SelectEditorCommand}"
+                    CommandParameter="{wpf:Int32 1}" />
+            <KeyBinding Key="D3" Modifiers="Ctrl" Command="{Binding SelectEditorCommand}"
+                    CommandParameter="{wpf:Int32 2}" />
+            <KeyBinding Key="D4" Modifiers="Ctrl" Command="{Binding SelectEditorCommand}"
+                    CommandParameter="{wpf:Int32 3}" />
+            <KeyBinding Key="D5" Modifiers="Ctrl" Command="{Binding SelectEditorCommand}"
+                    CommandParameter="{wpf:Int32 4}" />
+            <KeyBinding Key="D6" Modifiers="Ctrl" Command="{Binding SelectEditorCommand}"
+                    CommandParameter="{wpf:Int32 5}" />
+            <KeyBinding Key="D7" Modifiers="Ctrl" Command="{Binding SelectEditorCommand}"
+                    CommandParameter="{wpf:Int32 6}" />
+            <KeyBinding Key="D8" Modifiers="Ctrl" Command="{Binding SelectEditorCommand}"
+                    CommandParameter="{wpf:Int32 7}" />
+            <KeyBinding Key="D9" Modifiers="Ctrl" Command="{Binding SelectEditorCommand}"
+                    CommandParameter="{wpf:Int32 8}" />
+            <KeyBinding Key="D0" Modifiers="Ctrl" Command="{Binding SelectEditorCommand}"
+                    CommandParameter="{wpf:Int32 9}" />
             <KeyBinding Key="D1" Command="{Binding SelectViewerCommand}" CommandParameter="{wpf:Int32 0}" />
             <KeyBinding Key="D2" Command="{Binding SelectViewerCommand}" CommandParameter="{wpf:Int32 1}" />
             <KeyBinding Key="D3" Command="{Binding SelectViewerCommand}" CommandParameter="{wpf:Int32 2}" />
@@ -67,9 +79,9 @@
             <KeyBinding Key="D0" Command="{Binding SelectViewerCommand}" CommandParameter="{wpf:Int32 9}" />
         </Grid.InputBindings>
         <Grid>
-            <TabControl x:Name="Tabs" Margin="0,4,0,0" Style="{StaticResource BorderlessTab}" wpf:TabControlBehavior.IsCached="True"
-                    ItemsSource="{Binding Source={StaticResource TabsList}}" SelectedItem="{Binding SelectedItem}" TabIndex="1"
-                    Grid.RowSpan="2">
+            <TabControl x:Name="Tabs" Margin="0,4,0,0" Style="{StaticResource BorderlessTab}"
+                    wpf:TabControlBehavior.IsCached="True" ItemsSource="{Binding Source={StaticResource TabsList}}"
+                    SelectedItem="{Binding SelectedItem}" TabIndex="1" Grid.RowSpan="2">
                 <TabControl.ItemTemplate>
                     <DataTemplate>
                         <DockPanel>
@@ -79,7 +91,7 @@
                             <TextBlock FontSize="18"
                                     PreviewMouseLeftButtonDown="{wpf:MethodBinding {Binding ViewModel, ElementName=UI}, Header_PreviewLeftMouseButtonDown, {Binding}, {wpf:EventArgs}}">
                             <TextBox Text="{Binding DisplayName, UpdateSourceTrigger=LostFocus}" Height="26"
-                                        Margin="2,2,-6,1" wpf:SelectTextOnFocus.Active="true"
+                                        Margin="2,2,-6,1" wpf:FocusExtensions.SelectAllOnFocus="true"
                                         wpf:FocusExtensions.IsFocused="{Binding IsEditingHeader, Mode=TwoWay, IsAsync=True}"
                                         wpf:MouseCaptureExtension.HasCapture="{Binding IsEditingHeader, Mode=TwoWay}"
                                         Visibility="{Binding IsEditingHeader, Converter={StaticResource BooleanToVisibilityConverter}, Mode=OneWay}">
@@ -96,11 +108,15 @@
                 </TabControl.ItemTemplate>
                 <TabControl.Resources>
                     <DataTemplate DataType="{x:Type local:EditorViewModel}">
-                        <TextBox x:Name="ScriptText" AcceptsReturn="True" VerticalScrollBarVisibility="Visible"
+                        <avalon:TextEditor Name="CodeEditor" FontFamily="Consolas" FontSize="13pt"
+                                ShowLineNumbers="True" VerticalScrollBarVisibility="Visible"
                                 HorizontalScrollBarVisibility="Auto" BorderThickness="1"
                                 wpf:FocusExtensions.FocusOnLoaded="True"
                                 PreviewKeyDown="{wpf:MethodBinding {Binding ViewModel, ElementName=UI}, Editor_PreviewKeyDown, {wpf:EventSender}, {wpf:EventArgs}}"
-                                Text="{Binding Script, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" TabIndex="2" />
+                                Document="{Binding ScriptDocument, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                TabIndex="2"
+                                local:SyntaxHighlight.Source="EmergenceGuardian.WpfScriptViewer.Python.xshd">
+                        </avalon:TextEditor>
                     </DataTemplate>
                     <DataTemplate DataType="{x:Type local:ViewerViewModel}">
                         <ui:MediaPlayerWpf x:Name="Player" IsVolumeVisible="False" IsSpeedVisible="False"
@@ -179,8 +195,7 @@
                             Height="24" Style="{StaticResource ImageEnabled}" />
                 </Button>
                 <Separator />
-                <ComboBox Width="75" FontSize="10"
-                        Text="{Binding Zoom, Converter={StaticResource ZoomConverter}, Mode=TwoWay}"
+                <ComboBox Width="75" Text="{Binding Zoom, Converter={StaticResource ZoomConverter}, Mode=TwoWay}"
                         ItemsSource="{Binding ZoomList}" IsEditable="True" ToolTip="Zoom (+/-)" />
                 <Button ToolTip="Help (F1)" Command="{Binding HelpCommand, Mode=OneWay}">
                     <Image Source="/VapourSynthMultiViewer;component/Icons/Help.png" Stretch="None"
