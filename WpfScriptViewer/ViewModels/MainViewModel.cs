@@ -339,19 +339,6 @@ core = vs.get_core()
             e.Handled = true;
         }
 
-        /// <summary>
-        /// Keys 0-9 allow switching between viewer tabs but this also handles those keys for the editor textbox. Allow those keys to pass through.
-        /// </summary>
-        public void Editor_PreviewKeyDown(Control sender, System.Windows.Input.KeyEventArgs e) {
-            if (Keyboard.Modifiers == ModifierKeys.None && e.Key >= Key.D0 && e.Key <= Key.D9) {
-                string KeyText = new KeyConverter().ConvertToString(e.Key);
-                sender.RaiseEvent(new TextCompositionEventArgs(InputManager.Current.PrimaryKeyboardDevice,
-                    new TextComposition(InputManager.Current, sender, KeyText)) {
-                    RoutedEvent = TextCompositionManager.TextInputEvent
-                });
-            }
-        }
-
         public void Header_PreviewLeftMouseButtonDown(IScriptViewModel sender, MouseButtonEventArgs e) {
             if (sender == SelectedItem && sender.CanEditHeader && !sender.IsEditingHeader) {
                 sender.IsEditingHeader = true;

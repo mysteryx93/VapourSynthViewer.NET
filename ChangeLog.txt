@@ -1,5 +1,8 @@
 VapourSynth Multi-Viewer Change Log
 
+v0.9.2 (2018-07-14)
+- Fixed numeric keys not working in editor
+
 v0.9.1 (2018-07-11)
 - Replaced script TextBox with AvalonEdit.TextEditor
 - Added syntax highlighing

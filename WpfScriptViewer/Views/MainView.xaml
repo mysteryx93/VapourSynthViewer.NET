@@ -108,11 +108,11 @@
                 </TabControl.ItemTemplate>
                 <TabControl.Resources>
                     <DataTemplate DataType="{x:Type local:EditorViewModel}">
-                        <avalon:TextEditor Name="CodeEditor" FontFamily="Consolas" FontSize="13pt"
+                        <avalon:TextEditor FontFamily="Consolas" FontSize="13pt"
                                 ShowLineNumbers="True" VerticalScrollBarVisibility="Visible"
                                 HorizontalScrollBarVisibility="Auto" BorderThickness="1"
                                 wpf:FocusExtensions.FocusOnLoaded="True"
-                                PreviewKeyDown="{wpf:MethodBinding {Binding ViewModel, ElementName=UI}, Editor_PreviewKeyDown, {wpf:EventSender}, {wpf:EventArgs}}"
+                                PreviewKeyDown="Editor_PreviewKeyDown"
                                 Document="{Binding ScriptDocument, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                                 TabIndex="2"
                                 local:SyntaxHighlight.Source="EmergenceGuardian.WpfScriptViewer.Python.xshd">
