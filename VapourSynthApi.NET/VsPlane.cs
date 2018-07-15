@@ -1,7 +1,7 @@
 ﻿using System;
 using System.IO;
 
-namespace EmergenceGuardian.VapourSynthViewer {
+namespace EmergenceGuardian.VapourSynthApi {
     public class VsPlane {
         private VsOutput output;
         private IntPtr frame;

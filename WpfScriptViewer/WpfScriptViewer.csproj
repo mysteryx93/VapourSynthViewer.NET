@@ -208,10 +208,6 @@
       <Project>{0c8cd2f4-3e6e-4c47-9a00-1b482b2848ce}</Project>
       <Name>VapourSynthUI</Name>
     </ProjectReference>
-    <ProjectReference Include="..\VapourSynthViewer.NET\VapourSynthViewer.NET.csproj">
-      <Project>{190308e5-8b04-4adf-a393-fddaf5978afb}</Project>
-      <Name>VapourSynthViewer.NET</Name>
-    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <Resource Include="App.ico" />

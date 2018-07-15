@@ -4,7 +4,7 @@ using System.IO;
 using System.Reflection;
 using System.Text;
 
-namespace EmergenceGuardian.VapourSynthViewer {
+namespace EmergenceGuardian.VapourSynthApi {
     public class VsScript : IDisposable {
         /// <summary>
         /// Automatically calls Init and Finalize. Must call VsHelper.SetDllPath before referencing VsScript class.
@@ -163,7 +163,7 @@ namespace EmergenceGuardian.VapourSynthViewer {
         /// Returns the content of the COMPATBGR32.vpy resource file.
         /// </summary>
         private static string GetConvertCompatScript() {
-            using (StreamReader reader = new StreamReader(Assembly.GetExecutingAssembly().GetManifestResourceStream("EmergenceGuardian.VapourSynthViewer.COMPATBGR32.vpy"))) {
+            using (StreamReader reader = new StreamReader(Assembly.GetExecutingAssembly().GetManifestResourceStream("EmergenceGuardian.VapourSynthApi.COMPATBGR32.vpy"))) {
                 return reader.ReadToEnd();
             }
         }

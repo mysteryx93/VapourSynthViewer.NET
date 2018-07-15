@@ -85,9 +85,9 @@
       <Project>{7bf6711c-d3ea-48cf-bd5d-4b201aa788b5}</Project>
       <Name>MediaPlayerUI</Name>
     </ProjectReference>
-    <ProjectReference Include="..\VapourSynthViewer.NET\VapourSynthViewer.NET.csproj">
-      <Project>{190308e5-8b04-4adf-a393-fddaf5978afb}</Project>
-      <Name>VapourSynthViewer.NET</Name>
+    <ProjectReference Include="..\VapourSynthApi.NET\VapourSynthApi.NET.csproj">
+      <Project>{b5722bcf-b1c1-4bba-ad48-f5d818acd349}</Project>
+      <Name>VapourSynthApi.NET</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

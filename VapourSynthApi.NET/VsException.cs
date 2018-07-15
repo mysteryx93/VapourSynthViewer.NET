@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace EmergenceGuardian.VapourSynthViewer {
+namespace EmergenceGuardian.VapourSynthApi {
     public class VsException : Exception {
         public VsException(string msg) : base(msg) {
         }

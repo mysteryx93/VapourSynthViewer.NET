@@ -5,7 +5,7 @@ using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
 
-namespace EmergenceGuardian.VapourSynthViewer {
+namespace EmergenceGuardian.VapourSynthApi {
     public static class VsHelper  {
         private static bool isInit = false;
 

@@ -6,7 +6,7 @@ using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using EmergenceGuardian.MediaPlayerUI;
-using EmergenceGuardian.VapourSynthViewer;
+using EmergenceGuardian.VapourSynthApi;
 using EmergenceGuardian.WpfExtensions;
 
 namespace EmergenceGuardian.VapourSynthUI {

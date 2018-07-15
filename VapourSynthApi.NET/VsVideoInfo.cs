@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using System.Text;
 
-namespace EmergenceGuardian.VapourSynthViewer {
+namespace EmergenceGuardian.VapourSynthApi {
     [StructLayout(LayoutKind.Sequential)]
     public class VsVideoInfo {
         private IntPtr formatPtr;

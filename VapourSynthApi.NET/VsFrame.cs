@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace EmergenceGuardian.VapourSynthViewer {
+namespace EmergenceGuardian.VapourSynthApi {
     public class VsFrame : IDisposable {
         private VsOutput output;
         private IntPtr frame;

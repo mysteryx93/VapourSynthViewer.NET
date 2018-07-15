@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace EmergenceGuardian.VapourSynthViewer {
+namespace EmergenceGuardian.VapourSynthApi {
     public class VsFrameStatus : EventArgs {
         public VsFrameStatus() { }
         public VsFrameStatus(int index) {

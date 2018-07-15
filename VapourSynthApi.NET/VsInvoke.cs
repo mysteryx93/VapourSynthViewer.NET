@@ -2,7 +2,7 @@
 using System.IO;
 using System.Runtime.InteropServices;
 
-namespace EmergenceGuardian.VapourSynthViewer {
+namespace EmergenceGuardian.VapourSynthApi {
     internal class VsInvoke {
         //const string VsDll = "vapoursynth.dll";
         const string VsScriptDll = "vsscript.dll";

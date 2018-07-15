@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using System.Text;
 
-namespace EmergenceGuardian.VapourSynthViewer {
+namespace EmergenceGuardian.VapourSynthApi {
     public class Utf8Ptr {
         public IntPtr ptr = IntPtr.Zero;
         private Utf8Ptr() { }
