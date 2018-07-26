@@ -1,5 +1,9 @@
 VapourSynth Multi-Viewer Change Log
 
+v0.9.3 (2018-07-26)
+- Fixed multi-threading mode not activating
+- Added option to display square pixels when zooming
+
 v0.9.2 (2018-07-14)
 - Fixed numeric keys not working in editor
 

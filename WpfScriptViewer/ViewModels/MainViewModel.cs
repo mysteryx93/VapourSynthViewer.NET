@@ -42,6 +42,7 @@ namespace EmergenceGuardian.WpfScriptViewer {
         private double zoom = 1;
         private ObservableCollection<string> zoomList;
         private bool isMultiThreaded = false;
+        private bool squarePixels = false;
         private int editorIndex = 0;
         private int viewerIndex = 0;
         private const string FileFilter = "VapourSynth Script|*.vpy|All files|*.*";
@@ -56,10 +57,7 @@ namespace EmergenceGuardian.WpfScriptViewer {
         public event EventHandler<EditorTextEventArgs> DisplayScript;
         public event EventHandler<EditorTextEventArgs> UpdateScript;
 
-        private const string DefaultScript = 
-@"import vapoursynth as vs
-core = vs.get_core()
-";
+        private const string DefaultScript = "import vapoursynth as vs\ncore = vs.get_core()\n";
 
         #endregion
 
@@ -136,6 +134,11 @@ core = vs.get_core()
         /// Returns the amount of threads over which to run each script. 0 means ProcessorCouunt.
         /// </summary>
         public int Threads => IsMultiThreaded ? 0 : 1;
+
+        public bool SquarePixels {
+            get => squarePixels;
+            set => Set<bool>(() => SquarePixels, ref squarePixels, value);
+        }
 
         #endregion
 
@@ -231,6 +234,14 @@ core = vs.get_core()
         private bool CanToggleMultiThreaded() => true;
         private void OnToggleMultiThreaded() {
             IsMultiThreaded = !IsMultiThreaded;
+        }
+
+        private RelayCommand toggleSquarePixelsCommand;
+        public RelayCommand ToggleSquarePixelsCommand => this.InitCommand(ref toggleSquarePixelsCommand, OnToggleSquarePixels, CanToggleSquarePixels);
+
+        private bool CanToggleSquarePixels() => true;
+        private void OnToggleSquarePixels() {
+            SquarePixels = !SquarePixels;
         }
 
         private RelayCommand updateAllCommand;

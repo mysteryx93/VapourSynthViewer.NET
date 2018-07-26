@@ -44,6 +44,7 @@
             <KeyBinding Key="F5" Command="{Binding RunCommand, Mode=OneWay}" />
             <KeyBinding Key="F6" Modifiers="Ctrl" Command="{Binding UpdateAllCommand, Mode=OneWay}" />
             <KeyBinding Key="F8" Command="{Binding ToggleMultiThreadedCommand, Mode=OneWay}" />
+            <KeyBinding Key="F9" Command="{Binding ToggleSquarePixelsCommand, Mode=OneWay}" />
             <KeyBinding Key="F4" Modifiers="Ctrl" Command="{Binding SelectedItem.CloseCommand, Mode=OneWay}" />
             <KeyBinding Key="Add" Command="{Binding ZoomInCommand, Mode=OneWay}" />
             <KeyBinding Key="Subtract" Command="{Binding ZoomOutCommand, Mode=OneWay}" />
@@ -113,16 +114,13 @@
                                 HorizontalScrollBarVisibility="Auto" BorderThickness="1"
                                 wpf:FocusExtensions.FocusOnLoaded="True"
                                 PreviewKeyDown="Editor_PreviewKeyDown"
-                                Document="{Binding ScriptDocument, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                                 TabIndex="2"
                                 local:SyntaxHighlight.Source="EmergenceGuardian.WpfScriptViewer.Python.xshd">
                         </avalon:TextEditor>
                     </DataTemplate>
                     <DataTemplate DataType="{x:Type local:ViewerViewModel}">
-                        <ui:MediaPlayerWpf x:Name="Player" IsVolumeVisible="False" IsSpeedVisible="False"
-                                ChangeVolumeOnMouseWheel="False" IsStopVisible="False" IsLoopVisible="False"
-                                PositionDisplay="Seconds" TabIndex="2">
-                            <ui:MediaPlayerWpf.InputBindings>
+                        <vs:VsMediaPlayer x:Name="Player" TabIndex="2">
+                            <vs:VsMediaPlayer.InputBindings>
                                 <KeyBinding Key="Space" Command="{Binding UI.PlayPauseCommand, ElementName=Player}" />
                                 <KeyBinding Key="Right" Command="{Binding UI.SeekCommand, ElementName=Player}"
                                         CommandParameter="{wpf:Int32 1}" />
@@ -136,7 +134,7 @@
                                         CommandParameter="{wpf:Int32 -10}" />
                                 <KeyBinding Key="Enter" Modifiers="Alt"
                                         Command="{Binding UI.ToggleFullScreenCommand, ElementName=Player}" />
-                            </ui:MediaPlayerWpf.InputBindings>
+                            </vs:VsMediaPlayer.InputBindings>
                             <vs:VsMediaPlayerHost x:Name="PlayerHost" Script="{Binding Script, Mode=OneWay}"
                                     AutoPlay="False" Position="{Binding Position, Mode=TwoWay}"
                                     ScrollVerticalOffset="{Binding ScrollVerticalOffset, Mode=TwoWay}"
@@ -147,19 +145,20 @@
                                     ZoomIncrement="{Binding ViewModel.ZoomIncrement, ElementName=UI, Mode=OneTime}"
                                     ZoomScaleToFit="{Binding ViewModel.ZoomScaleToFit, ElementName=UI, Mode=TwoWay}"
                                     Threads="{Binding ViewModel.Threads, ElementName=UI}"
+                                    SquarePixels="{Binding ViewModel.SquarePixels, ElementName=UI, Mode=TwoWay}"
                                     OnMediaLoaded="{wpf:MethodBinding {Binding ViewModel, ElementName=UI}, Viewer_MediaLoaded}">
                                 <wpf:PushBindingManager.PushBindings>
                                     <wpf:PushBinding TargetProperty="ErrorMessage" Path="ErrorMessage" />
                                     <wpf:PushBinding TargetProperty="Duration" Path="Duration" />
                                 </wpf:PushBindingManager.PushBindings>
                             </vs:VsMediaPlayerHost>
-                        </ui:MediaPlayerWpf>
+                        </vs:VsMediaPlayer>
                     </DataTemplate>
                 </TabControl.Resources>
             </TabControl>
 
             <ToolBar Grid.Row="0" Height="40" ToolBarTray.IsLocked="True" VerticalAlignment="Top"
-                    HorizontalAlignment="Right" Width="380">
+                    HorizontalAlignment="Right" Width="412">
                 <Button ToolTip="New script (Ctrl+N)" Command="{Binding NewCommand, Mode=OneWay}">
                     <Image Source="/VapourSynthMultiViewer;component/Icons/New.png" Stretch="None"
                             Style="{StaticResource ImageEnabled}" />
@@ -186,8 +185,12 @@
                             Style="{StaticResource ImageEnabled}" />
                 </Button>
                 <Separator />
-                <CheckBox ToolTip="Enable multi-threading (F8)" IsChecked="{Binding IsMultiThreaded, Mode=OneWay}">
+                <CheckBox ToolTip="Enable multi-threading (F8)" IsChecked="{Binding IsMultiThreaded, Mode=TwoWay}">
                     <Image Source="/VapourSynthMultiViewer;component/Icons/MultiThreading.png" Stretch="None" Width="24"
+                            Height="24" Style="{StaticResource ImageEnabled}" />
+                </CheckBox>
+                <CheckBox ToolTip="Square Pixels (F9)" IsChecked="{Binding SquarePixels, Mode=TwoWay}">
+                    <Image Source="/VapourSynthMultiViewer;component/Icons/SquarePixels.png" Stretch="None" Width="24"
                             Height="24" Style="{StaticResource ImageEnabled}" />
                 </CheckBox>
                 <Button ToolTip="Load frame in all tabs (F6)" Command="{Binding UpdateAllCommand, Mode=OneWay}">

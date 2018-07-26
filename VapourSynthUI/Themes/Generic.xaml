@@ -6,6 +6,7 @@
 
     <wpf:BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
     <wpf:BooleanToVisibilityConverter x:Key="BooleanToVisibilityInverseConverter" True="Collapsed" False="Visible" />
+    <local:SquarePixelsConverter x:Key="SquarePixelsConverter" />
 
     <Style TargetType="{x:Type local:VsMediaPlayerHost}">
         <Setter Property="Template">
@@ -15,7 +16,8 @@
                             BorderThickness="{TemplateBinding BorderThickness}">
                         <Grid>
                             <Grid x:Name="PART_Host">
-                                <Image x:Name="PART_ImageFit" Stretch="Uniform" SnapsToDevicePixels="True" RenderOptions.BitmapScalingMode="HighQuality"
+                                <Image x:Name="PART_ImageFit" Stretch="Uniform" SnapsToDevicePixels="True" 
+                                        RenderOptions.BitmapScalingMode="{Binding SquarePixels, Converter={StaticResource SquarePixelsConverter}, RelativeSource={RelativeSource TemplatedParent}}" 
                                         Source="{Binding VideoSource, RelativeSource={RelativeSource TemplatedParent}, Mode=OneWay}"
                                         Visibility="{Binding ZoomScaleToFit, Converter={StaticResource BooleanToVisibilityConverter}, RelativeSource={RelativeSource TemplatedParent}}"/>
                                 <wpf:ZoomViewer x:Name="PART_Zoom"
@@ -25,6 +27,7 @@
                                         MinZoom="{Binding MinZoom, RelativeSource={RelativeSource TemplatedParent}, Mode=TwoWay}"
                                         MaxZoom="{Binding MaxZoom, RelativeSource={RelativeSource TemplatedParent}, Mode=TwoWay}"
                                         ZoomIncrement="{Binding ZoomIncrement, RelativeSource={RelativeSource TemplatedParent}, Mode=TwoWay}"
+                                        BitmapScalingMode="{Binding SquarePixels, Converter={StaticResource SquarePixelsConverter}, RelativeSource={RelativeSource TemplatedParent}}" 
                                         Visibility="{Binding ZoomScaleToFit, Converter={StaticResource BooleanToVisibilityInverseConverter}, RelativeSource={RelativeSource TemplatedParent}}">
                                     <Image Stretch="None" SnapsToDevicePixels="True"
                                             Source="{Binding VideoSource, RelativeSource={RelativeSource TemplatedParent}, Mode=OneWay}" />

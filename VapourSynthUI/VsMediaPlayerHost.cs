@@ -187,6 +187,11 @@ namespace EmergenceGuardian.VapourSynthUI {
             new FrameworkPropertyMetadata(false, FrameworkPropertyMetadataOptions.AffectsRender | FrameworkPropertyMetadataOptions.AffectsMeasure));
         public bool ZoomScaleToFit { get => (bool)GetValue(ZoomScaleToFitProperty); set => SetValue(ZoomScaleToFitProperty, value); }
 
+        // SquarePixels
+        public static readonly DependencyProperty SquarePixelsProperty = DependencyProperty.Register("SquarePixels", typeof(bool), typeof(VsMediaPlayerHost),
+            new FrameworkPropertyMetadata(true, FrameworkPropertyMetadataOptions.AffectsRender | FrameworkPropertyMetadataOptions.AffectsMeasure));
+        public bool SquarePixels { get => (bool)GetValue(SquarePixelsProperty); set => SetValue(SquarePixelsProperty, value); }
+
         #endregion
 
 
