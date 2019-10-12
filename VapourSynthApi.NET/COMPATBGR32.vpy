@@ -4,7 +4,7 @@ viewernet_node = viewernet_vs.get_output(index=0)
 viewernet_format = viewernet_node.format
 viewernet_params = { "format": viewernet_vs.COMPATBGR32 }
 if viewernet_node.height <= 480:
-    viewernet_matrix = "603"
+    viewernet_matrix = "601"
 else:
     viewernet_matrix = "709"
 if viewernet_format is None or (viewernet_format.color_family != viewernet_vs.RGB and viewernet_format.id != viewernet_vs.COMPATBGR32):
